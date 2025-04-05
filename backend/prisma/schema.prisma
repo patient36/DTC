@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum Method {
+  CARD
+}
+
+enum Currency {
+  USD
+}
+
+model User {
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  password    String
+  role        Role      @default(USER)
+  capsules    Capsule[]
+  usedStorage Float     @default(0.0) //GBs
+  createdAt   DateTime  @default(now())
+  payments    Payment[]
+}
+
+model Capsule {
+  id              String   @id @default(cuid())
+  owner           String
+  title           String
+  message         String
+  attachments     String[]
+  attachmentsSize Float    @default(0.0) //GBs
+  delivered       Boolean  @default(false)
+  deliveryDate    DateTime
+  readCount       Float    @default(0.0)
+  ownerId         User     @relation(fields: [owner], references: [id])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  payer       String
+  method      Method   @default(CARD)
+  amount      Float    @default(0.0)
+  currency    Currency @default(USD)
+  paymentId   String
+  used        Boolean  @default(false)
+  description String
+  status      Status   @default(PENDING)
+  payerId     User     @relation(fields: [payer], references: [id])
+}

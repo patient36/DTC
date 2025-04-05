@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Capsule" ADD COLUMN     "readCount" DOUBLE PRECISION NOT NULL DEFAULT 0.0;
