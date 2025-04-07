@@ -43,7 +43,7 @@ model Capsule {
   owner           String
   title           String
   message         String
-  attachments     String[]
+  attachments     Json
   attachmentsSize Float    @default(0.0) //GBs
   delivered       Boolean  @default(false)
   deliveryDate    DateTime
