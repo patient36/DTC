@@ -1,0 +1,1 @@
+export interface AuthedUser { userId: string, email: string, role: string}

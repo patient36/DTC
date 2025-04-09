@@ -18,6 +18,11 @@ enum Status {
   FAILED
 }
 
+enum Validity {
+  ACTIVE
+  EXPIRED
+}
+
 enum Method {
   CARD
 }
@@ -48,6 +53,7 @@ model Capsule {
   delivered       Boolean  @default(false)
   deliveryDate    DateTime
   readCount       Float    @default(0.0)
+  createdAt       DateTime @default(now())
   ownerId         User     @relation(fields: [owner], references: [id])
 }
 
@@ -58,8 +64,9 @@ model Payment {
   amount      Float    @default(0.0)
   currency    Currency @default(USD)
   paymentId   String
-  used        Boolean  @default(false)
+  validity    Validity @default(ACTIVE)
   description String
   status      Status   @default(PENDING)
+  createdAt   DateTime @default(now())
   payerId     User     @relation(fields: [payer], references: [id])
 }

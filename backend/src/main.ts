@@ -19,7 +19,14 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  app.enableCors();
+  app.enableCors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    methods: 'GET,POST,PUT,PATCH,DELETE',
+    allowedHeaders: ['Content-Type'],
+    exposedHeaders: ['Set-Cookie']
+  });
+
   app.use(cookieParser());
   await seedAdmin()
   await app.listen(process.env.PORT ?? 5000);

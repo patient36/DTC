@@ -1,36 +1,184 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCapsuleDto } from './dto/create-capsule.dto';
 import { S3Service } from 'src/s3/s3.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { encrypt, decrypt } from 'src/common/utils/crypto';
+import { AuthedUser } from 'src/common/types/currentUser';
 
 @Injectable()
 export class CapsulesService {
+
   constructor(private readonly prisma: PrismaService, private readonly S3Service: S3Service) { }
-  async create(dto: CreateCapsuleDto, files: Express.Multer.File[]) {
-    if (!files?.length) return { dto, attachments: [] };
 
-    const attachments = await Promise.all(
-      files.map(async (file) => {
-        const path = await this.S3Service.uploadFile(file);
-        return { path, size: file.size };
+  async create(dto: CreateCapsuleDto, files: Express.Multer.File[], user: AuthedUser) {
+    try {
+      const { userId } = user;
+
+      const attachments = files?.length
+        ? await Promise.all(
+          files.map(async (file) => ({
+            path: encrypt(await this.S3Service.uploadFile(file), userId),
+            size: file.size,
+            type: file.mimetype,
+          }))
+        )
+        : [];
+
+
+      const totalSizeBytes = attachments.reduce((sum, { size }) => sum + size, 0);
+      const totalSizeGB = totalSizeBytes / (1024 ** 3);
+
+      const capsule = await this.prisma.capsule.create({
+        data: {
+          title: encrypt(dto.title, userId),
+          owner: userId,
+          message: encrypt(dto.message, userId),
+          attachments,
+          attachmentsSize: totalSizeGB,
+          deliveryDate: dto.deliveryDate,
+        },
+      });
+
+      const userUpdated = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          usedStorage: {
+            increment: totalSizeGB
+          }
+        },
+      });
+
+      return {
+        message: "Capsule created",
+        newUsedStorage: userUpdated.usedStorage,
+        capsule: {
+          id: capsule.id,
+          deliveryDate: capsule.deliveryDate,
+          attachments: attachments.length
+        }
+      };
+
+    } catch (error) {
+      console.error(error)
+      throw new Error('Failed to create capsule')
+    }
+  }
+
+  async findAll(user: AuthedUser, page = 1, limit = 20) {
+    try {
+      page = Math.max(1, page);
+      const skip = (page - 1) * limit;
+
+      const totalDeliveredCaps = await this.prisma.capsule.count({ where: { owner: user.userId, delivered: true } })
+      const totalPendingCaps = await this.prisma.capsule.count({ where: { owner: user.userId, delivered: false } })
+
+      const delivered = await this.prisma.capsule.findMany({
+        where: { owner: user.userId, delivered: true },
+        skip,
+        take: limit,
       })
-    );
 
-    const totalSize = attachments.reduce((sum, file) => sum + file.size, 0);
+      const pending = await this.prisma.capsule.findMany({
+        where: { owner: user.userId, delivered: false },
+        skip,
+        take: limit,
+      })
 
-    return { dto, attachments, totalSize };
+      delivered.forEach((cap) => {
+        cap.title = decrypt(cap.title, user.userId);
+        cap.message = decrypt(cap.message, user.userId);
+
+        cap.attachments = (cap.attachments as Array<{ path: string }>).map((attachment) => ({
+          ...attachment,
+          path: decrypt(attachment.path, user.userId),
+        }));
+      });
+
+      pending.forEach((cap) => {
+        cap.title = "unavailable";
+        cap.message = "unavailable";
+        cap.attachments = { count: Array.isArray(cap.attachments) ? cap.attachments.length : 0 };
+      });
+
+      return {
+        page,
+        limit,
+        totalDeliveredCaps,
+        totalPendingCaps,
+        size: { deliveredCaps: delivered.length, pendingCaps: pending.length },
+        deliveredCaps: delivered,
+        pendingCaps: pending,
+      }
+    } catch (error) {
+      console.error('Failed to fetch capsules:', error);
+      throw new Error('Failed to retrieve capsules');
+    }
   }
 
+  async findOne(id: string, user: AuthedUser) {
+    try {
+      const capsule = await this.prisma.capsule.findUnique({ where: { id: id, owner: user.userId } })
+      if (!capsule) {
+        throw new HttpException('Capsule not found', HttpStatus.NOT_FOUND)
+      }
+      if (!capsule.delivered) {
+        capsule.title = decrypt(capsule.title, user.userId)
+        capsule.message = decrypt(capsule.message, user.userId)
+        capsule.attachments = (capsule.attachments as Array<{ path: string }>).map((attachment) => ({
+          ...attachment,
+          path: decrypt(attachment.path, user.userId),
+        }))
 
-  findAll() {
-    return `This action returns all capsules`;
+        await this.prisma.capsule.update({
+          where: { id: id },
+          data: {
+            readCount: capsule.readCount + 1
+          }
+        })
+      } else {
+        capsule.title = "unavailable"
+        capsule.message = "unavailable"
+        capsule.attachments = { count: Array.isArray(capsule.attachments) ? capsule.attachments.length : 0 };
+      }
+
+      return { capsule };
+    } catch (error) {
+      console.error('Failed to fetch capsule', error)
+      throw error
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} capsule`;
-  }
+  async remove(id: string, user: AuthedUser) {
+    try {
+      const capsule = await this.prisma.capsule.findUnique({ where: { id: id, owner: user.userId } })
 
-  remove(id: number) {
-    return `This action removes a #${id} capsule`;
+      if (!capsule) {
+        throw new HttpException('Capsule not found', HttpStatus.NOT_FOUND)
+      }
+
+      capsule.title = decrypt(capsule.title, user.userId)
+      capsule.message = decrypt(capsule.message, user.userId)
+      capsule.attachments = (capsule.attachments as Array<{ path: string }>).map((attachment) => ({
+        ...attachment,
+        path: decrypt(attachment.path, user.userId),
+      }))
+
+      capsule.attachments.forEach(async (attachment: { path: string }) => {
+        await this.S3Service.deleteFile(attachment.path)
+      })
+
+      const userUpdated = await this.prisma.user.update({
+        where: { id: user.userId },
+        data: {
+          usedStorage: { increment: capsule.attachmentsSize }
+        }
+      })
+
+      return { message: "Capsule deleted successfully", capsule, newStorage: userUpdated.usedStorage, recoveredStorage: capsule.attachmentsSize }
+
+    } catch (error) {
+      console.error('Failed to fetch capsule', error)
+      throw error
+    }
   }
 }

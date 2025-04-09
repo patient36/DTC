@@ -1,12 +1,14 @@
-import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, Delete, UseInterceptors, UploadedFiles, UseGuards } from '@nestjs/common';
 import { CapsulesService } from './capsules.service';
 import { CreateCapsuleDto } from './dto/create-capsule.dto';
-import { Public } from 'src/common/decorators/public.decorator';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { isMediaFile } from 'src/common/utils/mime-check';
+import { CurrentUser } from 'src/common/decorators/currentUser';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthedUser } from 'src/common/types/currentUser';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('capsules')
-@Public()
 export class CapsulesController {
   constructor(private readonly capsulesService: CapsulesService) { }
 
@@ -19,22 +21,22 @@ export class CapsulesController {
       },
     }),
   )
-  create(@Body() dto: CreateCapsuleDto, @UploadedFiles() files: Express.Multer.File[]) {
-    return this.capsulesService.create(dto, files);
+  create(@Body() dto: CreateCapsuleDto, @UploadedFiles() files: Express.Multer.File[], @CurrentUser() user: AuthedUser) {
+    return this.capsulesService.create(dto, files, user);
   }
 
   @Get()
-  findAll() {
-    return this.capsulesService.findAll();
+  findAll(@CurrentUser() user: AuthedUser, @Query('page') page: number, @Query('limit') limit: number) {
+    return this.capsulesService.findAll(user, page, limit);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.capsulesService.findOne(+id);
+  findOne(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    return this.capsulesService.findOne(id, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.capsulesService.remove(+id);
+  remove(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    return this.capsulesService.remove(id, user);
   }
 }

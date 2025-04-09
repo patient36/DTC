@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateCapsuleDto {
   @IsString()
@@ -8,4 +8,8 @@ export class CreateCapsuleDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  deliveryDate:string
 }
