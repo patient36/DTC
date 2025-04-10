@@ -37,15 +37,15 @@ model User {
   email       String    @unique
   password    String
   role        Role      @default(USER)
-  capsules    Capsule[]
   usedStorage Float     @default(0.0) //GBs
   createdAt   DateTime  @default(now())
-  payments    Payment[]
+  Capsule     Capsule[]
+  Payment     Payment[]
 }
 
 model Capsule {
   id              String   @id @default(cuid())
-  owner           String
+  ownerId         String
   title           String
   message         String
   attachments     Json
@@ -54,12 +54,12 @@ model Capsule {
   deliveryDate    DateTime
   readCount       Float    @default(0.0)
   createdAt       DateTime @default(now())
-  ownerId         User     @relation(fields: [owner], references: [id])
+  owner           User     @relation(fields: [ownerId], references: [id])
 }
 
 model Payment {
   id          String   @id @default(cuid())
-  payer       String
+  payerId     String
   method      Method   @default(CARD)
   amount      Float    @default(0.0)
   currency    Currency @default(USD)
@@ -68,5 +68,5 @@ model Payment {
   description String
   status      Status   @default(PENDING)
   createdAt   DateTime @default(now())
-  payerId     User     @relation(fields: [payer], references: [id])
+  payer       User     @relation(fields: [payerId], references: [id])
 }
