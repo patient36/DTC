@@ -124,6 +124,9 @@ export class CapsulesService {
 
   async findOne(id: string, user: AuthedUser) {
     try {
+      if (!id) {
+        throw new HttpException('capsule ID  is required', HttpStatus.BAD_REQUEST);
+      }
       const capsule = await this.prisma.capsule.findFirst({
         where: {
           id,
@@ -160,12 +163,18 @@ export class CapsulesService {
       return { capsule };
     } catch (error) {
       console.error('Failed to fetch capsule', error)
-      throw error
+      throw new HttpException(
+        error instanceof HttpException ? error.message : 'Failed to create capsule',
+        error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async remove(id: string, user: AuthedUser) {
     try {
+      if (!id) {
+        throw new HttpException('capsule ID  is required', HttpStatus.BAD_REQUEST);
+      }
       const capsule = await this.prisma.capsule.findFirst({
         where: { id, ownerId: user.userId },
       });
@@ -213,7 +222,10 @@ export class CapsulesService {
       };
     } catch (error) {
       console.error('Capsule deletion failed:', error);
-      throw error;
+      throw new HttpException(
+        error instanceof HttpException ? error.message : 'Failed to create capsule',
+        error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
