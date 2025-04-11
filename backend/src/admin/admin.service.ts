@@ -6,6 +6,7 @@ import { AuthedUser } from 'src/common/types/currentUser';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
 import { S3Service } from 'src/s3/s3.service';
+import { decrypt } from 'src/common/utils/crypto';
 
 @Injectable()
 export class AdminService {
@@ -189,6 +190,9 @@ export class AdminService {
     const users = await this.prisma.user.findMany({
       skip,
       take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     const sanitized = users.map(({ password, ...user }) => user);
@@ -203,9 +207,159 @@ export class AdminService {
 
   // Get all payments
   async findAllPayments(page = 1, limit = 20) {
+    page = Math.max(1, page);
+    const skip = (page - 1) * limit;
+
+    const payments = await this.prisma.payment.findMany(
+      {
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }
+    )
+
+    return {
+      page,
+      limit,
+      size: payments.length,
+      payments: payments,
+    };
 
   }
 
   // Activate payment
-  async activatePayment(id: string) { }
+  async activatePayment(id: string) {
+    try {
+      if (!id) {
+        throw new HttpException('Payment ID is required', HttpStatus.BAD_REQUEST);
+      }
+
+      const payment = await this.prisma.payment.update({
+        where: { id },
+        data: {
+          status: 'COMPLETED',
+          validity: 'ACTIVE',
+          createdAt: new Date(),
+        },
+        include: {
+          payer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { email: true },
+      });
+
+      const body = `
+        <div style="font-family: sans-serif; color: #333;">
+          <h2>Payment Activated</h2>
+          <p>A payment by <strong>${payment.payer?.name || 'Unknown User'}</strong> has been <strong style="color: green;">activated</strong>.</p>
+          <ul>
+            <li><strong>Amount:</strong> ${payment.amount}</li>
+            <li><strong>IntentID:</strong> ${payment.paymentId || 'N/A'}</li>
+            <li><strong>Date:</strong> ${new Date(payment.createdAt).toLocaleString()}</li>
+          </ul>
+          <p style="margin-top: 20px;">You are receiving this notification because you are an admin.</p>
+          <p style="margin-top: 40px;">DTC System</p>
+        </div>
+      `;
+
+      await Promise.all(
+        admins.map((admin) =>
+          this.MailService.sendEmail(
+            admin.email,
+            'Payment Activation Notice',
+            body
+          )
+        )
+      );
+
+      return payment;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Failed to activate payment',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // Delete user
+  async deleteUser(id: string) {
+    if (!id) {
+      throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    try {
+      const capsules = await this.prisma.capsule.findMany({
+        where: { ownerId: user.id },
+        select: { id: true, attachments: true },
+      });
+
+      let deletedFilesCount = 0;
+
+      for (const capsule of capsules) {
+        const attachments = Array.isArray(capsule.attachments)
+          ? capsule.attachments
+          : JSON.parse(capsule.attachments as any);
+
+        for (const attachment of attachments) {
+          await this.S3Service.deleteFile(decrypt(attachment.path, user.id));
+          deletedFilesCount++;
+        }
+      }
+
+      await this.prisma.$transaction([
+        this.prisma.payment.deleteMany({ where: { payerId: user.id } }),
+        this.prisma.capsule.deleteMany({ where: { ownerId: user.id } }),
+        this.prisma.user.delete({ where: { id: user.id } }),
+      ]);
+
+      const message = `
+        <div style="font-family: sans-serif; color: #333;">
+          <h2>Account Deletion by Admin</h2>
+          <p>Dear <strong>${user.name}</strong>,</p>
+          <p>Your account has been <strong style="color: #d9534f;">deleted by a system administrator</strong>. Here's what was removed:</p>
+          <ul>
+            <li><strong>${capsules.length}</strong> capsule${capsules.length !== 1 ? 's' : ''}</li>
+            <li><strong>${deletedFilesCount}</strong> file${deletedFilesCount !== 1 ? 's' : ''}</li>
+            <li><strong>All payment records</strong></li>
+          </ul>
+          <p>If this was done in error or you have concerns, please contact our support.</p>
+          <p style="margin-top: 40px;">Regards,<br/>DTC Team</p>
+        </div>
+      `;
+
+      await this.MailService.sendEmail(
+        user.email,
+        'Your Account Has Been Deleted',
+        message
+      );
+
+      const { password, ...safeUser } = user;
+      return safeUser;
+
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Failed to delete user',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
 }

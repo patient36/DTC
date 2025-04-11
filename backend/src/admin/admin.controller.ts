@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { Admin } from 'src/common/decorators/admin.decorator';
@@ -26,20 +26,26 @@ export class AdminController {
   }
 
   // Get all users
-  @Get('/all-users')
-  findAllUser() {
-    return this.adminService.findAllUser();
+  @Get('/users')
+  findAllUser(@Query('page') page: number, @Query('limit') limit: number) {
+    return this.adminService.findAllUser(page, limit);
   }
 
   // Get all payments
-  @Get('/all-payments')
-  findAllPayments() {
-    return this.adminService.findAllPayments;
+  @Get('/payments')
+  findAllPayments(@Query('page') page: number, @Query('limit') limit: number) {
+    return this.adminService.findAllPayments(page, limit);
   }
 
   // Activate payment
-  @Patch(':id')
+  @Patch('/payments/:id')
   activatePayment(@Param('id') id: string) {
     return this.adminService.activatePayment(id)
+  }
+
+  // Delete user
+  @Delete('/users/:id')
+  deleteUser(@Param('id') id: string) {
+    return this.adminService.deleteUser(id)
   }
 }
