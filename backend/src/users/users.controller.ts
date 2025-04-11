@@ -5,37 +5,31 @@ import {
   Put,
   Param,
   Delete,
-  Query,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
-import { Admin } from 'src/common/decorators/admin.decorator';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthedUser } from 'src/common/types/currentUser';
+import { CurrentUser } from 'src/common/decorators/currentUser';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('users')
-@UseGuards(AdminGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.deleteUser(id);
+  remove(@Param('id') id: string, @CurrentUser() AuthedUser: AuthedUser) {
+    return this.usersService.deleteUser(id, AuthedUser);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.updateUser(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto, @CurrentUser() AuthedUser: AuthedUser) {
+    return this.usersService.updateUser(id, dto, AuthedUser);
   }
 
   @Get(':id')
-  getUser(@Param('id') id: string) {
-    return this.usersService.findUser(id);
-  }
-
-  @Get()
-  @Admin()
-  findAll(@Query('page') page: number, @Query('limit') limit: number) {
-    return this.usersService.findAll(page, limit);
+  getUser(@Param('id') id: string, @CurrentUser() AuthedUser: AuthedUser) {
+    return this.usersService.findUser(id, AuthedUser);
   }
 }
