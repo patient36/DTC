@@ -68,5 +68,6 @@ model Payment {
   description String
   status      Status   @default(PENDING)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
   payer       User     @relation(fields: [payerId], references: [id])
 }

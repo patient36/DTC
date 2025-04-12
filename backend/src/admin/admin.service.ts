@@ -241,7 +241,7 @@ export class AdminService {
         data: {
           status: 'COMPLETED',
           validity: 'ACTIVE',
-          createdAt: new Date(),
+          updatedAt: new Date(),
         },
         include: {
           payer: {
