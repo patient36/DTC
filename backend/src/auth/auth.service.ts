@@ -1,18 +1,20 @@
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
-import { Injectable, HttpException, HttpStatus, ConsoleLogger } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailService } from 'src/mail/mail.service';
 import { AuthDto } from './dto/auth.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Response } from 'express';
+import { StripeService } from 'src/billing/stripe/stripe.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly MailService: MailService,
+    private readonly stripe: StripeService
   ) { }
 
   // Login
@@ -88,6 +90,9 @@ export class AuthService {
         </div>
       `
     );
+
+    // create new stripe customer
+    await this.stripe.attachCustomer(newUser.id, newUser.email)
 
     const { password, ...safeUser } = newUser
     return { user: safeUser };

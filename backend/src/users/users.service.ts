@@ -6,13 +6,15 @@ import * as bcrypt from 'bcryptjs';
 import { AuthedUser } from 'src/common/types/currentUser';
 import { S3Service } from 'src/s3/s3.service';
 import { decrypt } from 'src/common/utils/crypto';
+import { StripeService } from 'src/billing/stripe/stripe.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly MailService: MailService,
-    private readonly S3Service: S3Service
+    private readonly S3Service: S3Service,
+    private readonly stripe: StripeService
   ) { }
 
   // Delete user
@@ -20,37 +22,40 @@ export class UsersService {
     if (id !== authedUser.userId) {
       throw new HttpException('Invalid user ID', HttpStatus.BAD_REQUEST);
     }
-  
+
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-  
+
     try {
       const capsules = await this.prisma.capsule.findMany({
         where: { ownerId: user.id },
         select: { attachments: true },
       });
-  
+
       let deletedFilesCount = 0;
-  
+
       for (const capsule of capsules) {
         const attachments = Array.isArray(capsule.attachments)
           ? capsule.attachments
           : JSON.parse(capsule.attachments as any);
-  
+
         for (const { path } of attachments) {
           await this.S3Service.deleteFile(decrypt(path, user.id));
           deletedFilesCount++;
         }
       }
-  
+
+      // delete stripe customer
+      await this.stripe.deleteCustomer(user.id);
+
       const [deletedPayments] = await this.prisma.$transaction([
         this.prisma.payment.deleteMany({ where: { payerId: user.id } }),
         this.prisma.capsule.deleteMany({ where: { ownerId: user.id } }),
         this.prisma.user.delete({ where: { id: user.id } }),
       ]);
-  
+
       const message = `
         <div style="font-family: sans-serif; color: #333;">
           <h2>Account Deletion Confirmation</h2>
@@ -66,12 +71,12 @@ export class UsersService {
           <p style="margin-top: 40px;">Best regards,<br/>The DTC Team</p>
         </div>
       `;
-  
+
       await this.MailService.sendEmail(user.email, 'Account Deletion Confirmation', message);
-  
+
       const { password, ...safeUser } = user;
       return safeUser;
-  
+
     } catch (error) {
       console.error(error);
       throw new HttpException(
@@ -79,7 +84,7 @@ export class UsersService {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
-  }  
+  }
 
   // Update user
   async updateUser(id: string, dto: UpdateUserDto, AuthedUser: AuthedUser) {
@@ -114,6 +119,10 @@ export class UsersService {
         where: { id: id },
         data: updates,
       });
+
+      // update stripe customer
+      await this.stripe.syncCustomerEmail(updatedUser.id, updatedUser.email);
+
       const { password: _, ...safeUser } = updatedUser
       return safeUser;
     } catch (error) {

@@ -7,13 +7,15 @@ import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
 import { S3Service } from 'src/s3/s3.service';
 import { decrypt } from 'src/common/utils/crypto';
+import { StripeService } from 'src/billing/stripe/stripe.service';
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly MailService: MailService,
-    private readonly S3Service: S3Service
+    private readonly S3Service: S3Service,
+    private readonly stripe: StripeService
   ) { }
 
   // Get an admin registration token
@@ -166,6 +168,8 @@ export class AdminService {
         )
       );
 
+      // save admin as a client
+      await this.stripe.attachCustomer(admin.id, admin.email);
 
       const { password, ...adminSafe } = admin;
       return { admin: adminSafe };
@@ -322,6 +326,9 @@ export class AdminService {
           deletedFilesCount++;
         }
       }
+    
+      //delete stripe customer
+      await this.stripe.deleteCustomer(user.id)
 
       await this.prisma.$transaction([
         this.prisma.payment.deleteMany({ where: { payerId: user.id } }),

@@ -21,6 +21,7 @@ enum Status {
 enum Validity {
   ACTIVE
   EXPIRED
+  DECLINED
 }
 
 enum Method {
@@ -32,15 +33,16 @@ enum Currency {
 }
 
 model User {
-  id          String    @id @default(cuid())
-  name        String
-  email       String    @unique
-  password    String
-  role        Role      @default(USER)
-  usedStorage Float     @default(0.0) //GBs
-  createdAt   DateTime  @default(now())
-  Capsule     Capsule[]
-  Payment     Payment[]
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  password         String
+  role             Role      @default(USER)
+  usedStorage      Float     @default(0.0) //GBs
+  stripeCustomerId String?
+  createdAt        DateTime  @default(now())
+  Capsule          Capsule[]
+  Payment          Payment[]
 }
 
 model Capsule {

@@ -10,9 +10,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { CapsulesModule } from './capsules/capsules.module';
 import { AdminModule } from './admin/admin.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, AuthModule, CapsulesModule, AdminModule],
+  imports: [ConfigModule.forRoot(), UsersModule, AuthModule, CapsulesModule, AdminModule, BillingModule],
   controllers: [AppController],
   providers: [AppService, PrismaService, MailService, {
     provide: APP_GUARD,
