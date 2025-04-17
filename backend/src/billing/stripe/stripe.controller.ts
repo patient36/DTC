@@ -9,26 +9,21 @@ import {
 import { StripeService } from './stripe.service';
 import { Request } from 'express';
 import { Public } from 'src/common/decorators/public.decorator';
+import { CurrentUser } from 'src/common/decorators/currentUser';
+import { AuthedUser } from 'src/common/types/currentUser';
+import { AttachCardDto } from '../dto/attach-card.dto';
 
-@Public()
+
 @Controller('payment/card')
 export class StripeController {
     constructor(private readonly stripeService: StripeService) { }
 
-    @Post('manual')
-    manualPayment(@Body() body: { customerId: string; amount: number }) {
-        return this.stripeService.manualPayment(body.customerId, body.amount);
+    @Post('default')
+    async attachCard(@Body() body: AttachCardDto, @CurrentUser() user: AuthedUser) {
+        return this.stripeService.attachCard(body, user);
     }
 
-    @Post('auto')
-    autoPayment(@Body() body: { customerId: string; amount: number; paymentMethodId: string }) {
-        return this.stripeService.autoPayment(
-            body.customerId,
-            body.amount,
-            body.paymentMethodId,
-        );
-    }
-
+    @Public()
     @Post('webhook')
     webhook(
         @Req() req: RawBodyRequest<Request>,

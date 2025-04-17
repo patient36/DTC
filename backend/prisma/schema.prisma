@@ -18,12 +18,6 @@ enum Status {
   FAILED
 }
 
-enum Validity {
-  ACTIVE
-  EXPIRED
-  DECLINED
-}
-
 enum Method {
   CARD
 }
@@ -33,16 +27,19 @@ enum Currency {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  name             String
-  email            String    @unique
-  password         String
-  role             Role      @default(USER)
-  usedStorage      Float     @default(0.0) //GBs
-  stripeCustomerId String?
-  createdAt        DateTime  @default(now())
-  Capsule          Capsule[]
-  Payment          Payment[]
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  password        String
+  role            Role      @default(USER)
+  usedStorage     Float     @default(0.0) //GBs
+  customerId      String?   @unique
+  subscriptionId  String?
+  paymentMethodId String?
+  paidUntil       DateTime?
+  createdAt       DateTime  @default(now())
+  Capsule         Capsule[]
+  Payment         Payment[]
 }
 
 model Capsule {
@@ -65,8 +62,7 @@ model Payment {
   method      Method   @default(CARD)
   amount      Float    @default(0.0)
   currency    Currency @default(USD)
-  paymentId   String
-  validity    Validity @default(ACTIVE)
+  paymentId   String   @unique
   description String
   status      Status   @default(PENDING)
   createdAt   DateTime @default(now())
