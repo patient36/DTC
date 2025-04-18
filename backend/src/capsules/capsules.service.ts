@@ -205,7 +205,7 @@ export class CapsulesService {
       const userUpdated = await this.prisma.user.update({
         where: { id: user.userId },
         data: {
-          usedStorage: { increment: capsule.attachmentsSize },
+          usedStorage: { decrement: capsule.attachmentsSize },
         },
       });
 
@@ -227,5 +227,26 @@ export class CapsulesService {
         error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async markDueCapsulesAsDelivered() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return this.prisma.capsule.updateMany({
+      where: {
+        deliveryDate: {
+          gte: today,
+          lt: tomorrow,
+        },
+        delivered: false,
+      },
+      data: {
+        delivered: true,
+      },
+    });
   }
 }
