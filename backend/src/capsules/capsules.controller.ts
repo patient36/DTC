@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Param, Delete, UseInterceptors, UploadedFiles, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param, Delete, UseInterceptors, UploadedFiles, UseGuards, SetMetadata } from '@nestjs/common';
 import { CapsulesService } from './capsules.service';
 import { CreateCapsuleDto } from './dto/create-capsule.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -6,8 +6,11 @@ import { isMediaFile } from 'src/common/utils/mime-check';
 import { CurrentUser } from 'src/common/decorators/currentUser';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthedUser } from 'src/common/types/currentUser';
+import { PaymentGuard } from 'src/auth/guards/storage.guard';
 
 @UseGuards(AuthGuard('jwt'))
+@UseGuards(PaymentGuard)
+@SetMetadata('paymentProtected', true)
 @Controller('capsules')
 export class CapsulesController {
   constructor(private readonly capsulesService: CapsulesService) { }
