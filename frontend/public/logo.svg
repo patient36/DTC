@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <polygon points="100,20 140,60 130,90 100,80 70,90 60,60" fill="white" stroke="#00FF00" stroke-width="2" />
+
+  <circle cx="100" cy="100" r="60" fill="none" stroke="#00FF00" stroke-width="4" stroke-dasharray="5,5" />
+
+  <circle cx="100" cy="100" r="55" fill="none" stroke="#00FF00" stroke-width="2" opacity="0.6" />
+
+  <text x="100" y="110" font-family="monospace" font-size="24" text-anchor="middle" fill="white">12:45</text>
+
+  <circle cx="100" cy="100" r="4" fill="#00FF00" />
+</svg>

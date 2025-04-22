@@ -7,15 +7,17 @@ const NavBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = React.useState(false);
 
   const navItems = [
-    { name: 'Home', href: '/' },
+    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Capsules', href: '/capsules' },
     { name: 'About', href: '/about' },
   ];
 
   return (
-    <nav className="bg-slate-700 text-white p-4 fixed top-0 left-0 w-full z-50">
+    <nav className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 backdrop-blur-lg text-white p-4 fixed top-0 left-0 w-full z-50">
+
       <div className="flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold tracking-wide">
+        <Link href="/" className="text-2xl flex items-center font-bold tracking-wide">
+          <img src="/logo.svg" alt="" className='w-10 flex items-start' />
           DTC
         </Link>
 

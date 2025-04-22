@@ -25,19 +25,11 @@ const CapsulesPage = () => {
       icon: <FiClock className="text-yellow-400 text-3xl" />,
       accessible: false,
       color: 'from-amber-500/20 to-amber-900/40'
-    },
-    {
-      title: 'Incoming Capsules',
-      count: 3,
-      description: 'Future messages scheduled for reception',
-      icon: <FaSatelliteDish className="text-purple-400 text-3xl" />,
-      accessible: false,
-      color: 'from-purple-500/20 to-purple-900/40'
     }
   ]
 
   return (
-    <div className="min-h-screen bg-[url('/textures/starfield.jpg')] bg-cover bg-fixed p-6">
+    <div className="min-h-screen bg-[url('/textures/starfield.jpg')] bg-cover bg-fixed px-6 pt-12">
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (

@@ -142,61 +142,63 @@ const Dashboard = () => {
         </div>
 
         {/* Payments Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-[#1e293b] p-6 rounded-2xl shadow-xl"
-        >
-          <h2 className="text-xl font-semibold mb-4 text-cyan-300">Payments</h2>
-          <div className="overflow-auto">
-            <table className="w-full text-sm text-left text-white border-collapse">
-              <thead className="border-b border-gray-700">
-                <tr>
-                  <th className="py-2 px-3">ID</th>
-                  <th className="py-2 px-3">Amount</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedPayments.map(p => (
-                  <tr key={p.id} className="border-b border-gray-700">
-                    <td className="py-2 px-3 text-cyan-400">{p.id}</td>
-                    <td className="py-2 px-3">${p.amount.toFixed(2)}</td>
-                    <td className="py-2 px-3">
-                      <span className={`px-2 py-1 font-bold text-xs ${p.status === 'SUCCESS' ? 'text-green-600' : p.status === 'PENDING' ? 'text-amber-600' : 'text-red-500'}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3">{new Date(p.createdAt).toLocaleDateString()}</td>
+        {user.payments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-[#1e293b] p-6 rounded-2xl shadow-xl"
+          >
+            <h2 className="text-xl font-semibold mb-4 text-cyan-300">Payments</h2>
+            <div className="overflow-auto">
+              <table className="w-full text-sm text-left text-white border-collapse">
+                <thead className="border-b border-gray-700">
+                  <tr>
+                    <th className="py-2 px-3">ID</th>
+                    <th className="py-2 px-3">Amount</th>
+                    <th className="py-2 px-3">Status</th>
+                    <th className="py-2 px-3">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4 text-sm text-gray-300">
-            <span>Page {page + 1} of {Math.ceil(user.payments.length / rowsPerPage)}</span>
-            <div className="space-x-2">
-              <button
-                onClick={() => setPage(p => Math.max(p - 1, 0))}
-                disabled={page === 0}
-                className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-40"
-              >
-                Prev
-              </button>
-              <button
-                onClick={() => setPage(p => (p + 1 < Math.ceil(user.payments.length / rowsPerPage) ? p + 1 : p))}
-                disabled={(page + 1) * rowsPerPage >= user.payments.length}
-                className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-40"
-              >
-                Next
-              </button>
+                </thead>
+                <tbody>
+                  {paginatedPayments.map(p => (
+                    <tr key={p.id} className="border-b border-gray-700">
+                      <td className="py-2 px-3 text-cyan-400">{p.id}</td>
+                      <td className="py-2 px-3">${p.amount.toFixed(2)}</td>
+                      <td className="py-2 px-3">
+                        <span className={`px-2 py-1 font-bold text-xs ${p.status === 'SUCCESS' ? 'text-green-600' : p.status === 'PENDING' ? 'text-amber-600' : 'text-red-500'}`}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3">{new Date(p.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-4 text-sm text-gray-300">
+              <span>Page {page + 1} of {Math.ceil(user.payments.length / rowsPerPage)}</span>
+              <div className="space-x-2">
+                <button
+                  onClick={() => setPage(p => Math.max(p - 1, 0))}
+                  disabled={page === 0}
+                  className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-40"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setPage(p => (p + 1 < Math.ceil(user.payments.length / rowsPerPage) ? p + 1 : p))}
+                  disabled={(page + 1) * rowsPerPage >= user.payments.length}
+                  className="px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

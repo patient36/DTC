@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, forwardRef } from 'react'
 import Image from 'next/image'
 import { FiRefreshCw, FiImage, FiVideo, FiDownload, FiFile } from 'react-icons/fi'
+import { FaSpinner } from 'react-icons/fa'
 
 interface FileOpenerProps {
   type: string
@@ -98,7 +99,7 @@ const FileOpener = forwardRef<HTMLVideoElement, FileOpenerProps>(
                 onClick={handleRetry}
                 className="px-3 py-1.5 bg-black/70 hover:bg-black/60 rounded-md text-blue-100 text-xs flex items-center gap-1 transition-colors mt-2"
               >
-                <FiRefreshCw size={12} />
+                <FaSpinner className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                 Retry
               </button>
             </div>

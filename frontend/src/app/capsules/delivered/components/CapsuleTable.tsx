@@ -1,6 +1,7 @@
 // components/CapsuleTable.tsx
 import { FiImage, FiVideo, FiMusic, FiFileText } from 'react-icons/fi';
-import { Capsule, ColumnKey, ColumnVisibility, SortConfig, SortableKey } from '../types';
+import { Capsule, ColumnVisibility, SortConfig, SortableKey } from '../types';
+import { FaTrash } from 'react-icons/fa';
 
 interface CapsuleTableProps {
   capsules: Capsule[];

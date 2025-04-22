@@ -1,6 +1,5 @@
-// app/payment/page.tsx
-'use client'
-import CardForm from "../CardForm"
+"use client"
+import CardForm from "./CardForm"
 
 const PaymentPage = () => {
     return (
