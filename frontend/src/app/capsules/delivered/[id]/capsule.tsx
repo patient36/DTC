@@ -2,7 +2,7 @@
 
 import FileOpener from '@/components/file-opener'
 import { useParams } from 'next/navigation'
-import { FaRegClock, FaRegCalendar, FaHistory, FaHeart, FaLockOpen, FaCamera } from 'react-icons/fa'
+import { FaRegClock, FaRegCalendar, FaHistory, FaHeart, FaLockOpen, FaCamera, FaTrash } from 'react-icons/fa'
 import { GiTimeBomb, GiScrollQuill, GiWaxSeal } from 'react-icons/gi'
 import { motion, AnimatePresence } from 'framer-motion'
 import Modal from '@/components/modal'
@@ -20,6 +20,7 @@ const CapsulePage = () => {
     const [unlocked, setUnlocked] = useState(false)
     const [playUnlock] = useSound('/sounds/unlock.mp3', { volume: 0.5 })
     const [playPaper] = useSound('/sounds/paper.mp3')
+    const [confirmShow, setConfirmShow] = useState(false)
 
     const capsule = {
         id: 'abc123',
@@ -56,6 +57,11 @@ const CapsulePage = () => {
                 delayChildren: unlocked ? 0 : 0.5
             }
         }
+    }
+
+    const handleDelete = (id: string) => {
+        setConfirmShow(false)
+        alert(`Deleted capsule ${id}`)
     }
 
     return (
@@ -173,9 +179,22 @@ const CapsulePage = () => {
                                 </div>
                             </motion.div>
                         </motion.div>
+
+                        {/* Delete button */}
+                        <motion.div className="flex justify-center mt-8">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setConfirmShow(true)}
+                                className="px-6 py-3 flex items-center gap-2 cursor-pointer bg-red-600 text-white rounded-full shadow-lg"
+                            >
+                                <FaTrash />
+                                Delete Capsule
+                            </motion.button>
+                        </motion.div>
                     </motion.div>
 
-                    {/* Modal */}
+                    {/* File view Modal */}
                     <AnimatePresence>
                         {selectedAttachment && (
                             <Modal onClose={() => setSelectedAttachment(null)}>
@@ -191,6 +210,42 @@ const CapsulePage = () => {
                                         size={selectedAttachment.size}
                                         isInModal={true}
                                     />
+                                </motion.div>
+                            </Modal>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Confirmation Modal */}
+                    <AnimatePresence>
+                        {confirmShow && (
+                            <Modal onClose={() => setConfirmShow(false)}>
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="w-[90vw] h-[90vh] flex items-center justify-center bg-black/80 rounded-2xl max-w-4xl"
+                                >
+                                    <div className="flex flex-col items-center gap-4">
+                                        <GiWaxSeal className="text-5xl text-amber-600" />
+                                        <h1 className="text-2xl font-bold text-amber-600">Delete Capsule</h1>
+                                        <p className="text-lg text-amber-600">
+                                            Are you sure you want to delete this capsule? This action cannot be undone.
+                                        </p>
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={() => setConfirmShow(false)}
+                                                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(capsule.id)}
+                                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
                                 </motion.div>
                             </Modal>
                         )}
