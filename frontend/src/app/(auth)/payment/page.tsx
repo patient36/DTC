@@ -1,5 +1,7 @@
-"use client"
-import CardForm from "./CardForm"
+export const metadata={
+    title:"Billing card"
+}
+import CardForm from "@/components/payment/CardForm"
 
 const PaymentPage = () => {
     return (

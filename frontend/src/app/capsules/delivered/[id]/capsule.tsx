@@ -1,11 +1,11 @@
 'use client'
 
-import FileOpener from '@/components/file-opener'
+import FileOpener from '@/components/gloabal/file-opener'
 import { useParams } from 'next/navigation'
 import { FaRegClock, FaRegCalendar, FaHistory, FaHeart, FaLockOpen, FaCamera, FaTrash } from 'react-icons/fa'
 import { GiTimeBomb, GiScrollQuill, GiWaxSeal } from 'react-icons/gi'
 import { motion, AnimatePresence } from 'framer-motion'
-import Modal from '@/components/modal'
+import Modal from '@/components/gloabal/modal'
 import { useState } from 'react'
 import { useSound } from 'use-sound'
 import confetti from 'canvas-confetti'

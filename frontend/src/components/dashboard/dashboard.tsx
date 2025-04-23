@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaUserCog, FaChartPie, FaCloudUploadAlt, FaPen } from 'react-icons/fa';
-import { userData } from './user';
-import Modal from '@/components/modal';
-import UpdateForm from './update-user';
+import { userData } from '@/app/dashboard/user';
+import Modal from '@/components/gloabal/modal';
+import UpdateForm from './updateUserForm';
 import { GiCog } from 'react-icons/gi';
 
 const Dashboard = () => {
@@ -23,7 +23,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364] text-white p-6 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364] text-white px-6 py-10 font-sans">
       <div className="max-w-7xl mx-auto space-y-10">
         <motion.header
           initial={{ opacity: 0, y: -20 }}
@@ -66,9 +66,9 @@ const Dashboard = () => {
             </ul>
             <div
               onClick={() => setIsOpen(true)}
-              className='flex items-center gap-2 cursor-pointer bg-blue-500/20 mt-2 rounded-md p-2'>
+              className='flex items-center justify-center gap-2 cursor-pointer bg-blue-500/20 mt-2 rounded-md p-2'>
               <GiCog className='text-amber-500' />
-              <span className='text-sm font-bold'>Account settings</span>
+              <span className='text-sm font-bold'>Manage account information</span>
             </div>
           </motion.div>
 

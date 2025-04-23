@@ -1,4 +1,4 @@
-import NewCapsuleForm from "./createCapsule";
+import NewCapsuleForm from "@/components/capsules/capsuleForm";
 
 export const metadata = {
     title: 'Capsules - Create New Capsule',

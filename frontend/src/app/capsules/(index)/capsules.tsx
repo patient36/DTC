@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation'
 import { FiInbox, FiClock, FiPlusCircle, FiAlertCircle } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { GiTimeBomb } from 'react-icons/gi'
-import { FaSatelliteDish } from 'react-icons/fa'
 
 const CapsulesPage = () => {
   const router = useRouter()
@@ -30,7 +29,6 @@ const CapsulesPage = () => {
 
   return (
     <div className="min-h-screen bg-[url('/textures/starfield.jpg')] bg-cover bg-fixed px-6 pt-12">
-      {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (
           <motion.div
@@ -56,7 +54,6 @@ const CapsulesPage = () => {
       </div>
 
       <div className="relative z-10">
-        {/* Header with animated time icon */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

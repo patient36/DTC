@@ -4,36 +4,39 @@ import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaLock, FaSpinner } from 'react-icons/fa'
+import { useCardForm } from '@/hooks/forms/useCardForm'
+import { BillingFormValues } from '@/schemas/billing.card.schema'
 
 const CardForm = () => {
+    const {
+        register,
+        handleSubmit: handleFormSubmit,
+        formState: { errors }
+    } = useCardForm()
+
     const stripe = useStripe()
     const elements = useElements()
     const [loading, setLoading] = useState(false)
-    const [cardholderName, setCardholderName] = useState('')
     const [isVisible, setIsVisible] = useState(false)
 
     useEffect(() => {
         setIsVisible(true)
     }, [])
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!stripe || !elements || !cardholderName.trim()) return
-
-        setLoading(true)
+    const onSubmit = async (data: BillingFormValues) => {
+        if (!stripe || !elements) return
         const cardElement = elements.getElement(CardElement)
         if (!cardElement) return
 
+        setLoading(true)
         try {
             const { error, paymentMethod } = await stripe.createPaymentMethod({
                 type: 'card',
                 card: cardElement,
-                billing_details: { name: cardholderName },
+                billing_details: { name: data.cardHolderName },
             })
 
-            if (error || !paymentMethod) {
-                throw error || new Error('Payment method creation failed')
-            }
+            if (error || !paymentMethod) throw error || new Error('Payment method creation failed')
 
             const res = await fetch('/api/attach-card', {
                 method: 'POST',
@@ -41,17 +44,13 @@ const CardForm = () => {
                 body: JSON.stringify({ paymentMethodId: paymentMethod.id }),
             })
 
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.message)
+            const resData = await res.json()
+            if (!res.ok) throw new Error(resData.message)
 
-            // Success animation
             setIsVisible(false)
             setTimeout(() => {
                 alert('Card attached successfully!')
-                setCardholderName('')
-                if (elements.getElement(CardElement)) {
-                    elements.getElement(CardElement)?.clear()
-                }
+                if (elements.getElement(CardElement)) elements.getElement(CardElement)?.clear()
                 setIsVisible(true)
             }, 500)
         } catch (error: any) {
@@ -86,13 +85,13 @@ const CardForm = () => {
                     <div className="relative bg-gray-800 bg-opacity-50 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-700 border-opacity-50">
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                        <form onSubmit={handleFormSubmit(onSubmit)} className="p-8 space-y-6">
                             <div className="text-center">
                                 <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400 mb-2">
                                     Billing Card
                                 </h1>
                                 <p className="text-gray-300 text-sm mt-2">
-                                    Provide your card details below to register it as your default payment .
+                                    Provide your card details below to register it as your default payment.
                                 </p>
                             </div>
 
@@ -105,18 +104,17 @@ const CardForm = () => {
                                         <input
                                             type="text"
                                             placeholder="John Doe"
-                                            value={cardholderName}
-                                            onChange={(e) => setCardholderName(e.target.value)}
-                                            required
+                                            {...register('cardHolderName')}
                                             className="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white placeholder-gray-400 transition-all"
                                         />
                                     </motion.div>
+                                    {errors.cardHolderName && (
+                                        <p className="text-sm text-red-400 mt-1">{errors.cardHolderName.message}</p>
+                                    )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Card Details
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Card Details</label>
                                     <motion.div
                                         whileHover={{ scale: 1.01 }}
                                         className="p-4 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-cyan-500 transition-all"
