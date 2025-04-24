@@ -28,8 +28,4 @@ export class UsersController {
     return this.usersService.updateUser(id, dto, AuthedUser);
   }
 
-  @Get(':id')
-  getUser(@Param('id') id: string, @CurrentUser() AuthedUser: AuthedUser) {
-    return this.usersService.findUser(id, AuthedUser);
-  }
 }

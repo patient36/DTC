@@ -1,10 +1,12 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, Get } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { CurrentUser } from 'src/common/decorators/currentUser';
+import { AuthedUser } from 'src/common/types/currentUser';
 
 @Controller('auth')
 export class AuthController {
@@ -25,6 +27,11 @@ export class AuthController {
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     return this.authService.logout(res);
+  }
+
+  @Get('/me')
+  async getCurrentUser(@CurrentUser() AuthedUser: AuthedUser) {
+    return this.authService.getCurrentUser(AuthedUser)
   }
 
   @Public()

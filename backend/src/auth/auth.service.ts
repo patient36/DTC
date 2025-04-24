@@ -8,6 +8,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Response } from 'express';
 import { StripeService } from 'src/billing/stripe/stripe.service';
+import { AuthedUser } from 'src/common/types/currentUser';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +42,7 @@ export class AuthService {
       maxAge: 6 * 60 * 60 * 1000,
     });
 
-    const { password: _, ...safeUser } = user;
+    const safeUser = { name: user.name, email: user.email, role: user.role }
     return safeUser;
   }
 
@@ -102,6 +103,25 @@ export class AuthService {
   async logout(res: Response) {
     res.clearCookie('auth_token');
     return { message: 'User logged out successfully' };
+  }
+
+  // Get current user
+  async getCurrentUser(AuthedUser: AuthedUser) {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: AuthedUser.userId } });
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      const { password, ...safeUser } = user
+      return safeUser
+
+    } catch (error) {
+      console.error('Failed to retrieve user:', error);
+      throw new HttpException(
+        error instanceof HttpException ? error.message : 'Failed to retrieve user',
+        error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   // get reset password token

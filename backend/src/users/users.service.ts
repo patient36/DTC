@@ -134,26 +134,4 @@ export class UsersService {
     }
   }
 
-  // Get user
-  async findUser(id: string, AuthedUser: AuthedUser) {
-    try {
-      if (id !== AuthedUser.userId) {
-        throw new HttpException('Invalid user Id', HttpStatus.BAD_REQUEST);
-      }
-      const user = await this.prisma.user.findUnique({ where: { id: id } });
-      if (!user) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-      }
-      const { password, ...safeUser } = user
-      return safeUser
-
-    } catch (error) {
-      console.error('Failed to retrieve user:', error);
-      throw new HttpException(
-        error instanceof HttpException ? error.message : 'Failed to retrieve user',
-        error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
 }
