@@ -38,7 +38,7 @@ export class AuthService {
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 6 * 60 * 60 * 1000,
     });
 
@@ -106,21 +106,45 @@ export class AuthService {
   }
 
   // Get current user
-  async getCurrentUser(AuthedUser: AuthedUser) {
+  async getCurrentUser({ userId }: AuthedUser) {
+    if (!userId) {
+      throw new HttpException('Invalid user ID', HttpStatus.BAD_REQUEST);
+    }
+  
     try {
-      const user = await this.prisma.user.findUnique({ where: { id: AuthedUser.userId } });
+      const [user, delivered, pending] = await Promise.all([
+        this.prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            usedStorage: true,
+            createdAt: true,
+            paidUntil: true,
+          },
+        }),
+        this.prisma.capsule.count({ where: { ownerId: userId, delivered: true } }),
+        this.prisma.capsule.count({ where: { ownerId: userId, delivered: false } }),
+      ]);
+  
       if (!user) {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-      const { password, ...safeUser } = user
-      return safeUser
-
+  
+      return {
+        ...user,
+        capsules: {
+          total: delivered + pending,
+          delivered,
+          pending,
+        },
+      };
     } catch (error) {
       console.error('Failed to retrieve user:', error);
-      throw new HttpException(
-        error instanceof HttpException ? error.message : 'Failed to retrieve user',
-        error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error instanceof HttpException
+        ? error
+        : new HttpException('Failed to retrieve user information', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

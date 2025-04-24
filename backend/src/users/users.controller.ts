@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -28,4 +29,8 @@ export class UsersController {
     return this.usersService.updateUser(id, dto, AuthedUser);
   }
 
+  @Get('/payments')
+  getPayments(@CurrentUser() AuthedUser: AuthedUser, @Query('page') page: number, @Query('limit') limit: number) {
+    return this.usersService.getPayments(page, limit, AuthedUser);
+  }
 }

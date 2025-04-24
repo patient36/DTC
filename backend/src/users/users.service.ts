@@ -134,4 +134,30 @@ export class UsersService {
     }
   }
 
+  // Get payments
+  async getPayments(page = 1, limit = 20, authedUser: AuthedUser) {
+    page = Math.max(1, page);
+    const skip = (page - 1) * limit;
+    const payments = await this.prisma.payment.findMany(
+      {
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        where: {
+          payerId: authedUser.userId,
+        }
+      }
+    )
+
+    return {
+      page,
+      limit,
+      size: payments.length,
+      payments: payments,
+    };
+
+  }
+
 }
