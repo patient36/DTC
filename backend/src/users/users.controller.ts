@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { deleteUserDto } from './dto/delete-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthedUser } from 'src/common/types/currentUser';
 import { CurrentUser } from 'src/common/decorators/currentUser';
@@ -20,8 +21,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() AuthedUser: AuthedUser) {
-    return this.usersService.deleteUser(id, AuthedUser);
+  remove(@Param('id') id: string, @Body() dto: deleteUserDto, @CurrentUser() AuthedUser: AuthedUser) {
+    return this.usersService.deleteUser(id, dto, AuthedUser);
   }
 
   @Put(':id')

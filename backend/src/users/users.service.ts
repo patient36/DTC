@@ -7,6 +7,7 @@ import { AuthedUser } from 'src/common/types/currentUser';
 import { S3Service } from 'src/s3/s3.service';
 import { decrypt } from 'src/common/utils/crypto';
 import { StripeService } from 'src/billing/stripe/stripe.service';
+import { deleteUserDto } from './dto/delete-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,14 +19,19 @@ export class UsersService {
   ) { }
 
   // Delete user
-  async deleteUser(id: string, authedUser: AuthedUser) {
+  async deleteUser(id: string, dto: deleteUserDto, authedUser: AuthedUser) {
     if (id !== authedUser.userId) {
-      throw new HttpException('Invalid user ID', HttpStatus.BAD_REQUEST);
+      throw new HttpException('user ID mismatch', HttpStatus.BAD_REQUEST);
     }
 
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+    // validate password
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) {
+      throw new HttpException('Wrong password', HttpStatus.UNAUTHORIZED);
     }
 
     try {
@@ -90,7 +96,7 @@ export class UsersService {
   async updateUser(id: string, dto: UpdateUserDto, AuthedUser: AuthedUser) {
     try {
       if (id !== AuthedUser.userId) {
-        throw new HttpException('Invalid user Id', HttpStatus.BAD_REQUEST);
+        throw new HttpException('user ID mismatch', HttpStatus.BAD_REQUEST);
       }
       const user = await this.prisma.user.findUnique({ where: { id: id } });
       if (!user) {
