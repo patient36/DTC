@@ -1,6 +1,5 @@
-// components/ColumnToggle.tsx
 import { FiCheck } from 'react-icons/fi';
-import { ColumnKey } from '../types';
+import { ColumnKey } from '@/types/customTypes/delivered';
 
 interface ColumnToggleProps {
     column: ColumnKey;

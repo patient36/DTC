@@ -1,4 +1,3 @@
-// components/SearchInput.tsx
 import { FiSearch } from 'react-icons/fi';
 
 interface SearchInputProps {

@@ -1,7 +1,5 @@
-// components/CapsuleTable.tsx
 import { FiImage, FiVideo, FiMusic, FiFileText } from 'react-icons/fi';
-import { Capsule, ColumnVisibility, SortConfig, SortableKey } from '../types';
-import { FaTrash } from 'react-icons/fa';
+import { Capsule, ColumnVisibility, SortConfig, SortableKey } from '@/types/customTypes/delivered';
 
 interface CapsuleTableProps {
   capsules: Capsule[];
@@ -73,9 +71,9 @@ export const CapsuleTable = ({
               )}
               {columnVisibility.deliveryDate && (
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-white">
+                  <p className="text-sm text-white">
                     {new Date(capsule.deliveryDate).toLocaleDateString()}
-                  </div>
+                  </p>
                   <div className="text-xs text-gray-400">
                     {new Date(capsule.deliveryDate).toLocaleTimeString()}
                   </div>

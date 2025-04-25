@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { FaTrash } from 'react-icons/fa'
-import { userData as user } from '@/app/dashboard/user'
 import { useUpdateUserForm } from '@/hooks/forms/useUpdateUserForm'
 import { UpdateUserFormValues, updateUserSchema } from '@/schemas/user.update.shema'
 import { z } from 'zod'
+import { useAuth } from '@/hooks/auth/useAuth'
 
 const UpdateForm = () => {
+    const { user } = useAuth()
     const [showConfirm, setShowConfirm] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 

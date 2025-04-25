@@ -1,4 +1,3 @@
-// components/PaginationControls.tsx
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 interface PaginationControlsProps {

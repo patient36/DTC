@@ -1,14 +1,27 @@
 "use client"
 
 import { useLoginForm } from '@/hooks/forms/useLoginForm';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { LoginFormValues } from '@/schemas/login.schema';
-import React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify'
 
 const LoginForm = () => {
     const { register, handleSubmit, formState: { errors } } = useLoginForm()
+    const { login } = useAuth()
+    const router = useRouter()
     const onSubmit = (data: LoginFormValues) => {
-        console.log(data)
+        login(data, {
+            onSuccess: () => {
+                toast.success('Logged in successfully')
+                router.push('/dashboard')
+            },
+            onError: (err: any) =>
+                toast.error(err?.message || 'Login failed. Please try again'),
+        });
     }
+
     return (
         <div className="flex min-h-screen flex-col md:flex-row">
             <div className="hidden md:flex w-1/2 bg-blue-950 text-white flex-col justify-center items-center p-8">
@@ -65,9 +78,9 @@ const LoginForm = () => {
                     <div className="mt-2 text-center">
                         <p className="text-sm">
                             Don't have an account?{' '}
-                            <a href="#" className="text-blue-400 hover:underline">
+                            <Link href="/register" className="text-blue-400 hover:underline">
                                 Register here
-                            </a>
+                            </Link>
                         </p>
                     </div>
                 </form>

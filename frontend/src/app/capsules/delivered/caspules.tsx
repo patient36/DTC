@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mockCapsules } from './data';
-import { ColumnToggle } from './components/ColumnToggle';
-import { SearchInput } from './components/SearchInput';
-import { PaginationControls } from './components/PaginationControls';
-import { CapsuleTable } from './components/CapsuleTable';
-import { ColumnVisibility, SortConfig, SortableKey } from './types';
+import { ColumnToggle } from '@/components/capsules/delivered/ColumnToggle';
+import { SearchInput } from '@/components/capsules/delivered/SearchInput';
+import { PaginationControls } from '@/components/capsules/delivered/PaginationControls';
+import { CapsuleTable } from '@/components/capsules/delivered/CapsuleTable';
+import { ColumnVisibility, SortConfig, SortableKey } from '@/types/customTypes/delivered';
 
 const DeliveredCapsules = () => {
     const router = useRouter();

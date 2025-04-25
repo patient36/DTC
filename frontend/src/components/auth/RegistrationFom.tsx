@@ -2,13 +2,29 @@
 
 import { useRegisterForm } from '@/hooks/forms/useRegisterForm';
 import { RegisterFormValues } from '@/schemas/register.schema';
+import Link from 'next/link';
 import React from 'react';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify'
 
 const RegistrationForm = () => {
     const { register, handleSubmit, formState: { errors } } = useRegisterForm()
+    const { registerUser } = useAuth()
+    const router = useRouter()
 
     const onSubmit = (data: RegisterFormValues) => {
         console.log(data)
+        registerUser(data, {
+            onSuccess: () => {
+                toast.success('Account created successfully')
+                toast.info('You can now login')
+                router.push('/')
+            },
+            onError: (err: any) => {
+                toast.error(err?.message || 'Login failed. Please try again')
+            }
+        })
     }
 
     return (
@@ -85,6 +101,14 @@ const RegistrationForm = () => {
                     >
                         Register
                     </button>
+                    <div className="mt-2 text-center">
+                        <p className="text-sm">
+                            Already have an account?{' '}
+                            <Link href="/" className="text-blue-400 hover:underline">
+                                Sign in
+                            </Link>
+                        </p>
+                    </div>
                 </form>
             </div>
         </div>

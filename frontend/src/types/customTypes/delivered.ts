@@ -1,4 +1,3 @@
-// types.ts
 export interface Attachment {
   path: string;
   size: number;
