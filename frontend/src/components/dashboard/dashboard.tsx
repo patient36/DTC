@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaSpinner } from 'react-icons/fa';
 import Modal from '@/components/gloabal/modal';
-import UpdateForm from '@/components/dashboard/updateUserForm';
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -11,12 +10,15 @@ import { AccountCard } from '@/components/dashboard/AccountCard';
 import { StorageCard } from '@/components/dashboard/StorageCard';
 import { CapsulesCard } from '@/components/dashboard/CapsulesCard';
 import { PaymentsTable } from '@/components/dashboard/PaymentsTable';
-import { Payment } from '@/types/payment';
+import { usePayment } from '@/hooks/payments/usePayments';
+import AccountSettingsPage from './settings/AccountSettings';
 
 const Dashboard = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const router = useRouter();
   const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5)
+  const { paymentsData } = usePayment(page, rowsPerPage)
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -36,8 +38,6 @@ const Dashboard = () => {
 
   const freeStorage = 0.1;
   const storageRate = 5;
-  const rowsPerPage = 5;
-  const payments: Payment[] = [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364] text-white px-6 py-10 font-sans">
@@ -65,18 +65,22 @@ const Dashboard = () => {
           />
         </div>
 
-        {payments.length > 0 && (
+        {paymentsData?.payments && paymentsData.payments.length > 0 ? (
           <PaymentsTable
-            payments={payments}
+            payments={paymentsData.payments}
+            total={paymentsData.total}
             page={page}
             rowsPerPage={rowsPerPage}
             onPageChange={setPage}
+            onRowsPerPageChange={setRowsPerPage}
           />
+        ) : (
+          <div className="text-gray-400 py-4 text-center">No payments found</div>
         )}
 
         {isOpen && (
           <Modal onClose={() => setIsOpen(false)}>
-            <UpdateForm />
+            <AccountSettingsPage onClose={() => setIsOpen(false)} />
           </Modal>
         )}
       </div>

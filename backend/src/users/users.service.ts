@@ -54,7 +54,7 @@ export class UsersService {
       }
 
       // delete stripe customer
-      await this.stripe.deleteCustomer(user.id);
+      await this.stripe.deleteCustomer(user.id).catch(console.error);
 
       const [deletedPayments] = await this.prisma.$transaction([
         this.prisma.payment.deleteMany({ where: { payerId: user.id } }),
@@ -144,6 +144,7 @@ export class UsersService {
   async getPayments(page = 1, limit = 20, authedUser: AuthedUser) {
     page = Math.max(1, page);
     const skip = (page - 1) * limit;
+    const total = await this.prisma.payment.count({ where: { payerId: authedUser.userId } })
     const payments = await this.prisma.payment.findMany(
       {
         skip,
@@ -160,6 +161,7 @@ export class UsersService {
     return {
       page,
       limit,
+      total,
       size: payments.length,
       payments: payments,
     };

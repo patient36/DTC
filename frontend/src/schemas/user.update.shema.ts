@@ -1,18 +1,22 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const updateUserSchema = z
     .object({
-        name: z.string().min(3, 'Name must be at least 3 characters').max(30).optional(),
+        name: z.string().min(1, 'Name must be at least 1 characters').max(30).optional(),
         email: z.string().email('Invalid email').optional(),
-        oldPassword: z.string().min(6, 'Old password must be at least 6 characters').optional(),
-        newPassword: z.string().min(6, 'New password must be at least 6 characters').optional(),
+        oldPassword: z.string().min(6, 'Old password must be at least 6 characters').optional().or(z.literal('')),
+        newPassword: z.string().min(6, 'New password must be at least 6 characters').optional().or(z.literal('')),
     })
     .refine(
-        data => !data.oldPassword || !!data.newPassword,
+        (data) => {
+            if (data.oldPassword && !data.newPassword) return false;
+            if (data.newPassword && !data.oldPassword) return false;
+            return true;
+        },
         {
-            message: 'New password is required when old password is provided',
+            message: 'Both old and new passwords must be provided together',
             path: ['newPassword'],
         }
-    )
+    );
 
 export type UpdateUserFormValues = z.infer<typeof updateUserSchema>;

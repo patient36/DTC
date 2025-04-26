@@ -153,27 +153,58 @@ export class StripeService {
     }
 
     async attachCustomer(userId: string, email: string): Promise<string> {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
-        if (!user) throw new Error('User not found');
+        if (!userId || !email) {
+            throw new Error('Missing required parameters: userId and email must be provided');
+        }
 
-        if (user.customerId) return user.customerId;
+        try {
+            const user = await this.prisma.user.findUnique({ where: { id: userId } });
+            if (!user) throw new Error('User not found');
 
-        const customer = await this.stripe.customers.create({
-            email,
-            metadata: { userId },
-        });
+            if (user.customerId) {
+                try {
+                    await this.stripe.customers.retrieve(user.customerId);
+                    return user.customerId;
+                } catch (error) {
+                    console.warn(`Existing customer ${user.customerId} not found in Stripe, creating new one`);
+                }
+            }
 
-        const subscription = await this.stripe.subscriptions.create({
-            customer: customer.id,
-            items: [{ price: this.priceId }]
-        })
+            const customer = await this.stripe.customers.create({
+                email,
+                metadata: { userId },
+            });
 
-        await this.prisma.user.update({
-            where: { id: userId },
-            data: { customerId: customer.id, subscriptionId: subscription.id },
-        });
+            let subscription;
+            try {
+                subscription = await this.stripe.subscriptions.create({
+                    customer: customer.id,
+                    items: [{ price: this.priceId }],
+                    payment_behavior: 'default_incomplete',
+                    expand: ['latest_invoice.payment_intent'],
+                });
+            } catch (subscriptionError) {
+                console.error('Subscription creation failed, deleting customer', subscriptionError);
+                await this.stripe.customers.del(customer.id).catch(cleanupError => {
+                    console.error('Failed to cleanup customer after subscription failure:', cleanupError);
+                });
+                throw new Error('Failed to create subscription');
+            }
 
-        return customer.id;
+            // Update user in database
+            await this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    customerId: customer.id,
+                    subscriptionId: subscription.id,
+                },
+            });
+
+            return customer.id;
+        } catch (error) {
+            console.error('Error in attachCustomer:', error);
+            throw new Error(`Failed to attach customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     }
 
     async syncCustomerEmail(userId: string, email: string): Promise<void> {
@@ -194,16 +225,32 @@ export class StripeService {
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!user?.customerId) return;
 
-        await this.stripe.customers.del(user.customerId);
+        try {
+            if (user.subscriptionId) {
+                const subscription = await this.stripe.subscriptions.retrieve(user.subscriptionId);
 
-        if (!user.subscriptionId) return;
+                if (subscription.status === 'active') {
+                    await this.stripe.subscriptions.update(user.subscriptionId, {
+                        cancel_at_period_end: true
+                    });
+                } else {
+                    await this.stripe.subscriptions.cancel(user.subscriptionId);
+                }
+            }
 
-        await this.stripe.subscriptions.update(user.subscriptionId, { cancel_at_period_end: true });
+            await this.stripe.customers.del(user.customerId);
 
-        await this.prisma.user.update({
-            where: { id: userId },
-            data: { customerId: null, subscriptionId: null },
-        });
+            await this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    customerId: null,
+                    subscriptionId: null,
+                },
+            });
+        } catch (error) {
+            console.error('Error deleting Stripe customer:', error);
+            throw error;
+        }
     }
 
 }
