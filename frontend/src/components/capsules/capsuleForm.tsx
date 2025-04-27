@@ -151,6 +151,7 @@ const NewCapsuleForm = () => {
                             id="attachments"
                             type="file"
                             multiple
+                            accept='image/*,video/*'
                             onChange={onFileChange}
                             className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
                         />

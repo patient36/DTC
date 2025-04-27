@@ -1,0 +1,1 @@
+export const formatSize = (size: number) => (size < 1 ? `${(size * 1024).toFixed(0)}MB` : `${size.toFixed(1)}GB`);

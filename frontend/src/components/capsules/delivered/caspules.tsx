@@ -1,0 +1,53 @@
+'use client'
+
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import CapsulesTable from '@/components/capsules/delivered/CapsuleTable';
+import { useCapsules } from '@/hooks/queries/useCapsules';
+import LoadingSpinner from '@/components/gloabal/Spinner';
+
+const DeliveredCapsules = () => {
+    const router = useRouter();
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(2);
+    const { capsulesData, capsulesLoading } = useCapsules(page, rowsPerPage)
+
+    const handlePageSizeChange = (limit: number) => {
+        setPage(1)
+        setRowsPerPage(limit)
+    }
+
+    if (capsulesLoading) {
+        return <LoadingSpinner />
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-950 text-gray-100 p-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                            Delivered Capsules
+                        </h1>
+                    </div>
+                </div>
+
+                {capsulesData?.delivered.capsules && capsulesData.delivered.capsules.length > 0 ? (
+                    <CapsulesTable
+                        capsules={capsulesData.delivered.capsules}
+                        total={capsulesData.delivered.total}
+                        page={page}
+                        rowsPerPage={rowsPerPage}
+                        onPageChange={setPage}
+                        onRowsPerPageChange={handlePageSizeChange}
+                        onRowClick={(id: string) => router.push(`/capsules/delivered/${id}`)}
+                    />
+                ) : (
+                    <div className="text-gray-400 py-4 text-center">No delivered capsules found</div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default DeliveredCapsules;

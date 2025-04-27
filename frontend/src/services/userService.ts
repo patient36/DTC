@@ -12,7 +12,6 @@ export const deleteUser = async (id: string, password: string) => {
     const { data } = await axios.delete(`/users/${id}`, {
         data: { password },
     });
-    console.log(data);
     return data;
 };
 

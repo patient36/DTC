@@ -44,7 +44,7 @@ export const PaymentsTable = ({
     method: false,
     amount: true,
     currency: true,
-    paymentId: false,
+    paymentId: true,
     description: true,
     status: true,
     createdAt: true,
@@ -109,7 +109,7 @@ export const PaymentsTable = ({
     { key: 'payerId', label: 'Payer ID', width: 'w-48' },
   ];
 
-  const defaultOptions = [5, 10, 25, 50, 100, 200];
+  const defaultOptions = [5, 10, 25, 50, 100];
   const options = [rowsPerPage, ...defaultOptions]
     .filter((v, i, self) => v <= total && self.indexOf(v) === i)
     .sort((a, b) => a - b);
@@ -199,8 +199,8 @@ export const PaymentsTable = ({
               <tr key={payment.id} className="hover:bg-gray-800/30 transition-colors">
                 {visibleColumns.combinedId && (
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm font-mono font-medium text-gray-100">{payment.id}</div>
-                    <div className="text-xs font-mono text-gray-400">{payment.paymentId}</div>
+                    <div className="text-sm font-semibold text-gray-100 mb-1">{payment.id}</div>
+                    <div className="text-xs font-light text-gray-400">{payment.paymentId}</div>
                   </td>
                 )}
                 {visibleColumns.method && (
@@ -259,12 +259,12 @@ export const PaymentsTable = ({
 
       <div className="flex flex-col sm:flex-row items-center justify-between mt-4 px-2 text-sm text-gray-400">
         <div className="mb-2 sm:mb-0">
-          Showing {startItem} to {endItem} of {total} entries
+          {startItem} to {endItem} of {total} payments
         </div>
         <div className="flex space-x-2">
           <button
             onClick={() => onPageChange(page - 1)}
-            disabled={page === 0}
+            disabled={page <= 1}
             className="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <FiChevronLeft className="mr-1" /> Previous

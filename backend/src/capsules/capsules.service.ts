@@ -110,11 +110,17 @@ export class CapsulesService {
       return {
         page,
         limit,
-        totalDeliveredCaps,
-        totalPendingCaps,
-        size: { deliveredCaps: delivered.length, pendingCaps: pending.length },
-        deliveredCaps: delivered,
-        pendingCaps: pending,
+        totalCapsules: totalDeliveredCaps + totalPendingCaps,
+        delivered: {
+          pageSize: delivered.length,
+          total: totalDeliveredCaps,
+          capsules: delivered
+        },
+        pending: {
+          pageSize: pending.length,
+          total: totalPendingCaps,
+          capsules: pending
+        }
       }
     } catch (error) {
       console.error('Failed to fetch capsules:', error);
@@ -127,14 +133,11 @@ export class CapsulesService {
       if (!id) {
         throw new HttpException('capsule ID  is required', HttpStatus.BAD_REQUEST);
       }
-      const capsule = await this.prisma.capsule.findFirst({
+      const capsule = await this.prisma.capsule.findUnique({
         where: {
           id,
           ownerId: user.userId,
-        },
-        include: {
-          owner: true,
-        },
+        }
       });
 
       if (!capsule) {

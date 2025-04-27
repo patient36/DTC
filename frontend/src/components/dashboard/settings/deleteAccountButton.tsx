@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { FaTrash } from 'react-icons/fa'
 import { useAuth } from '@/hooks/auth/useAuth'
-import { useUser } from '@/hooks/users/useUsers'
+import { useUser } from '@/hooks/mutations/useUsers'
 import { toast } from 'react-toastify'
 
 const DeleteAccountButton = ({ onClose }: { onClose: () => void }) => {

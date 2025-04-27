@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useUpdateUserForm } from '@/hooks/forms/useUpdateUserForm'
 import { UpdateUserFormValues } from '@/schemas/user.update.shema'
 import { useAuth } from '@/hooks/auth/useAuth'
-import { useUser } from '@/hooks/users/useUsers'
+import { useUser } from '@/hooks/mutations/useUsers'
 import { toast } from 'react-toastify'
 
 const UpdateUserForm = ({ onClose }: { onClose: () => void }) => {
