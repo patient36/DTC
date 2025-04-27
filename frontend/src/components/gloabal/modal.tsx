@@ -31,7 +31,7 @@ const Modal = ({
     }, [])
 
     return (
-        <div className="modal-container z-50 fixed top-0 left-0 min-h-screen w-screen bg-black/70 flex items-center justify-center">
+        <div className="modal-container z-50 fixed top-0 left-0 min-h-screen w-screen bg-black/70 backdrop-blur-2xl flex items-center justify-center">
             <button
                 className="absolute z-[100] top-4 right-4 p-3 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 cursor-pointer transition duration-200 ease-in-out"
                 onClick={onClose}

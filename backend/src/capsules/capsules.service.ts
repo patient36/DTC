@@ -163,7 +163,7 @@ export class CapsulesService {
         capsule.attachments = { count: Array.isArray(capsule.attachments) ? capsule.attachments.length : 0 };
       }
 
-      return { capsule };
+      return capsule;
     } catch (error) {
       console.error('Failed to fetch capsule', error)
       throw new HttpException(

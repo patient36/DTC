@@ -5,7 +5,7 @@ export const createCapsule = async () => {
     return data;
 };
 
-export const getCapsule = async (id: string) => {
+export const getCapsuleById = async (id: string) => {
     const { data } = await axios.get(`/capsules/${id}`);
     return data;
 };

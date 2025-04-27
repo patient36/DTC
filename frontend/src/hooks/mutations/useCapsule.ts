@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getCapsule } from '@/services/capsulesServce';
+import { getCapsuleById } from '@/services/capsulesServce';
 import { Capsule } from '@/types/capsule';
 
 export const useCapsule = (id: string) => {
@@ -10,7 +10,7 @@ export const useCapsule = (id: string) => {
         error: capsuleErrorDetail
     } = useQuery<Capsule>({
         queryKey: ['capsule', id],
-        queryFn: () => getCapsule(id),
+        queryFn: () => getCapsuleById(id),
         retry: false,
     })
 

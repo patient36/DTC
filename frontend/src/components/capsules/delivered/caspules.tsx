@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import CapsulesTable from '@/components/capsules/delivered/CapsuleTable';
 import { useCapsules } from '@/hooks/queries/useCapsules';
 import LoadingSpinner from '@/components/gloabal/Spinner';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 const DeliveredCapsules = () => {
+    const { isAuthenticated } = useAuth()
     const router = useRouter();
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(2);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const { capsulesData, capsulesLoading } = useCapsules(page, rowsPerPage)
 
     const handlePageSizeChange = (limit: number) => {
@@ -17,7 +19,13 @@ const DeliveredCapsules = () => {
         setRowsPerPage(limit)
     }
 
-    if (capsulesLoading) {
+    useEffect(() => {
+        if (!capsulesLoading && !isAuthenticated) {
+            router.push('/');
+        }
+    }, [capsulesLoading, isAuthenticated]);
+
+    if (capsulesLoading || !isAuthenticated) {
         return <LoadingSpinner />
     }
 

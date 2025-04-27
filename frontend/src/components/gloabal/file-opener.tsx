@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, forwardRef } from 'react'
 import Image from 'next/image'
 import { FiRefreshCw, FiImage, FiVideo, FiDownload, FiFile } from 'react-icons/fi'
-import { FaSpinner } from 'react-icons/fa'
+import { IoMdRefresh } from 'react-icons/io'
 
 interface FileOpenerProps {
   type: string
@@ -94,12 +94,11 @@ const FileOpener = forwardRef<HTMLVideoElement, FileOpenerProps>(
           ) : error ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-10 p-4">
               <p className="text-sm font-medium text-blue-100">Failed to load content</p>
-              <p className="text-xs text-blue-300 mt-1">{fileType} file could not be displayed</p>
               <button
                 onClick={handleRetry}
-                className="px-3 py-1.5 bg-black/70 hover:bg-black/60 rounded-md text-blue-100 text-xs flex items-center gap-1 transition-colors mt-2"
+                className="px-3 py-1.5 cursor-pointer bg-amber-600/70 hover:bg-amber-600/60 rounded-md text-blue-100 text-xs flex items-center gap-1 transition-colors mt-2"
               >
-                <FaSpinner className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                <IoMdRefresh/>
                 Retry
               </button>
             </div>

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getCapsules } from '@/services/capsulesServce';
 import { CapsulesResponse } from '@/types/capsule';
 
-export const useCapsules = (page: number, limit: number) => {
+export const useCapsules = (page = 1, limit = 10) => {
     const {
         data: capsulesData,
         isLoading: capsulesLoading,

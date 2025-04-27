@@ -35,8 +35,9 @@ export const PaymentsTable = ({
   onRowsPerPageChange
 }: PaymentsTableProps) => {
   const totalPages = Math.ceil(total / rowsPerPage);
-  const startItem = page === 0 ? page * rowsPerPage + 1 : page * rowsPerPage;
-  const endItem = Math.min((page + 1) * rowsPerPage, total);
+  const startItem = Math.max(1, (1 + (rowsPerPage * (page - 1))))
+  const endItem = Math.min(page * rowsPerPage, total);
+
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>({
     id: true,
@@ -264,14 +265,14 @@ export const PaymentsTable = ({
         <div className="flex space-x-2">
           <button
             onClick={() => onPageChange(page - 1)}
-            disabled={page <= 1}
+            disabled={page === 1}
             className="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <FiChevronLeft className="mr-1" /> Previous
           </button>
           <button
             onClick={() => onPageChange(page + 1)}
-            disabled={page >= totalPages - 1}
+            disabled={page >= totalPages}
             className="inline-flex items-center px-3 py-1.5 rounded-md bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             Next <FiChevronRight className="ml-1" />

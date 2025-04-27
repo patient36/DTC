@@ -21,6 +21,11 @@ const Dashboard = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
+  const handlePageSizeChange = (limit: number) => {
+    setPage(1)
+    setRowsPerPage(limit)
+  }
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/');
@@ -70,7 +75,7 @@ const Dashboard = () => {
             page={page}
             rowsPerPage={rowsPerPage}
             onPageChange={setPage}
-            onRowsPerPageChange={setRowsPerPage}
+            onRowsPerPageChange={handlePageSizeChange}
           />
         ) : (
           <div className="text-gray-400 py-4 text-center">No payments found</div>

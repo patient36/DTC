@@ -1,16 +1,45 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { FiInbox, FiClock, FiPlusCircle, FiAlertCircle } from 'react-icons/fi'
+import { FiInbox, FiClock, FiPlusCircle, FiLock } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { GiTimeBomb } from 'react-icons/gi'
+import { useCapsules } from '@/hooks/queries/useCapsules'
+import { useEffect, useState } from 'react'
+import LoadingSpinner from '@/components/gloabal/Spinner'
+import { useAuth } from '@/hooks/auth/useAuth'
+
+const generateParticles = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({
+    id: i,
+    top: Math.random() * 100,
+    left: Math.random() * 100,
+    size: Math.random() * 3 + 1,
+    moveDistance: Math.random() * 50 + 50,
+    duration: Math.random() * 10 + 5,
+  }));
 
 const CapsulesPage = () => {
   const router = useRouter()
+  const { isAuthenticated } = useAuth()
+  const [particles, setParticles] = useState<{ id: number, top: number, left: number, size: number, moveDistance: number, duration: number }[]>([])
+  useEffect(() => { setParticles(generateParticles(200)) }, [])
+
+  const { capsulesData, capsulesLoading } = useCapsules()
+
+  useEffect(() => {
+    if (!capsulesLoading && !isAuthenticated) {
+      router.push('/');
+    }
+  }, [capsulesLoading, isAuthenticated]);
+
+  if (capsulesLoading || !isAuthenticated) {
+    return <LoadingSpinner />
+  }
 
   const stats = [
     {
       title: 'Delivered Capsules',
-      count: 10,
+      count: capsulesData?.delivered.total || 0,
       description: 'Time messages successfully received from your past',
       icon: <FiInbox className="text-blue-400 text-3xl" />,
       accessible: true,
@@ -19,7 +48,7 @@ const CapsulesPage = () => {
     },
     {
       title: 'Pending Transmission',
-      count: 5,
+      count: capsulesData?.pending.total || 0,
       description: 'Capsules in temporal transit - awaiting delivery date',
       icon: <FiClock className="text-yellow-400 text-3xl" />,
       accessible: false,
@@ -29,26 +58,15 @@ const CapsulesPage = () => {
 
   return (
     <div className="min-h-screen bg-[url('/textures/starfield.jpg')] bg-cover bg-fixed px-6 pt-12">
+
       <div className="fixed inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+        {particles.map(({ id, top, left, size, moveDistance, duration }) => (
           <motion.div
-            key={i}
+            key={id}
             className="absolute bg-white rounded-full"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`
-            }}
-            animate={{
-              opacity: [0.2, 0.8, 0.2],
-              y: [`${Math.random() * 50}px`, `${Math.random() * 50 + 50}px`]
-            }}
-            transition={{
-              duration: Math.random() * 10 + 5,
-              repeat: Infinity,
-              repeatType: 'reverse'
-            }}
+            style={{ top: `${top}%`, left: `${left}%`, width: size, height: size }}
+            animate={{ opacity: [0.2, 0.8, 0.2], y: [0, moveDistance] }}
+            transition={{ duration, repeat: Infinity, repeatType: "reverse" }}
           />
         ))}
       </div>
@@ -73,7 +91,7 @@ const CapsulesPage = () => {
           <p className="text-gray-400 mt-2">Secure communication across time</p>
         </motion.div>
 
-        {/* Dashboard Grid */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {stats.map(({ title, count, description, icon, accessible, route, color }) => (
             <motion.div
@@ -101,7 +119,7 @@ const CapsulesPage = () => {
                     </p>
                     {!accessible && (
                       <div className="flex items-center gap-2 text-yellow-400/80 text-xs bg-yellow-900/20 px-3 py-1 rounded-full">
-                        <FiAlertCircle />
+                        <FiLock />
                         <span>Temporal Lock</span>
                       </div>
                     )}

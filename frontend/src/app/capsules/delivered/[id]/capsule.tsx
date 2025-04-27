@@ -6,12 +6,18 @@ import { FaRegClock, FaRegCalendar, FaHistory, FaHeart, FaLockOpen, FaCamera, Fa
 import { GiTimeBomb, GiScrollQuill, GiWaxSeal } from 'react-icons/gi'
 import { motion, AnimatePresence } from 'framer-motion'
 import Modal from '@/components/gloabal/modal'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSound } from 'use-sound'
 import confetti from 'canvas-confetti'
+import { useCapsule } from '@/hooks/mutations/useCapsule'
+import { formatDate } from '@/utils/formatDates'
+import LoadingSpinner from '@/components/gloabal/Spinner'
+import { useAuth } from '@/hooks/auth/useAuth'
+import { useRouter } from 'next/navigation'
 
 const CapsulePage = () => {
-    const { id } = useParams()
+    const { id } = useParams<{ id: string }>()
+    const router = useRouter()
     const [selectedAttachment, setSelectedAttachment] = useState<null | {
         path: string
         size: number
@@ -22,20 +28,33 @@ const CapsulePage = () => {
     const [playPaper] = useSound('/sounds/paper.mp3')
     const [confirmShow, setConfirmShow] = useState(false)
 
-    const capsule = {
-        id: 'abc123',
-        title: 'To My Future Self',
-        message: 'Lorem ipsum dolor sit amet consectetur, adipisicing elit. Animi impedit autem labore officia aperiam neque accusantium, laboriosam sequi numquam delectus optio deleniti eum. Minima esse vel similique temporibus natus totam, deleniti ut. Delectus, sed. Debitis, cum quos? Nemo nulla voluptates sapiente deserunt quisquam. Commodi obcaecati iure rem excepturi, dolorem consequatur vero? Veritatis, at non! Libero id eius, fugiat magnam repudiandae aliquam earum dolore harum autem. Asperiores reprehenderit alias cum nihil, libero deleniti provident voluptas ab recusandae fuga porro perferendis soluta numquam quis? Deleniti dignissimos corporis, optio vel voluptatem laboriosam laudantium, commodi quo molestias mollitia tempora perferendis explicabo odio fuga adipisci?',
-        attachments: [
-            { path: '/img1.jpg', size: 3456789, type: 'image/jpeg' },
-            { path: '/img2.jpg', size: 23456789, type: 'image/jpeg' },
-            { path: '/vid1.mp4', size: 2321123456789, type: 'video/mp4' },
-            { path: 'https://picsum.photos/seed/237/536/354', size: 456789, type: 'image/jpeg' },
-            { path: 'https://picsum.photos/seed/picsum/200/300', size: 56789, type: 'image/jpeg' },
-            { path: 'https://picsum.photos/200/300?grayscale', size: 56789, type: 'image/jpeg' },
-        ],
-        createdAt: '2022-12-20T12:12:12.100Z',
-        deliveredAt: '2023-12-20T12:12:12.100Z',
+    const { capsule, capsuleError, capsuleLoading } = useCapsule(id)
+    const { isAuthenticated } = useAuth()
+
+    useEffect(() => {
+        if (!capsuleLoading && !isAuthenticated) {
+            router.push('/');
+        }
+    }, [capsuleLoading, isAuthenticated]);
+
+    if (capsuleLoading || !isAuthenticated) {
+        return <LoadingSpinner />
+    }
+
+    if (capsuleError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <p className="text-xl text-amber-500">Failed to retrieve capsule</p>
+            </div>
+        )
+    }
+
+    if (!capsule || capsuleError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <p className="text-xl text-amber-500">Capsule not found</p>
+            </div>
+        )
     }
 
     const handleUnlock = () => {
@@ -82,7 +101,7 @@ const CapsulePage = () => {
                         <FaLockOpen />
                         <span>Open Time Capsule</span>
                     </motion.button>
-                    <p className="text-amber-600 text-sm">Created: {new Date(capsule.createdAt).toLocaleDateString()}</p>
+                    <p className="text-amber-600 text-sm">Created: {formatDate(capsule.createdAt)}</p>
                 </motion.div>
             ) : (
                 <motion.div
@@ -139,7 +158,7 @@ const CapsulePage = () => {
                             variants={item}
                             className="flex items-center justify-center gap-2 mb-4 text-lg font-semibold text-amber-300"
                         >
-                            <FaCamera /> Attachments from {new Date(capsule.deliveredAt).toLocaleDateString()}
+                            <FaCamera /> Attachments from {formatDate(capsule.deliveryDate)}
                         </motion.div>
                         <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                             {capsule.attachments.map((att) => (
@@ -165,7 +184,7 @@ const CapsulePage = () => {
                                 <FaRegClock className="text-amber-600" />
                                 <div>
                                     <p className="text-xs text-amber-800">Created</p>
-                                    <p className="text-sm">{new Date(capsule.createdAt).toLocaleString()}</p>
+                                    <p className="text-sm">{formatDate(capsule.createdAt)}</p>
                                 </div>
                             </motion.div>
                             <motion.div
@@ -175,7 +194,7 @@ const CapsulePage = () => {
                                 <FaRegCalendar className="text-amber-600" />
                                 <div>
                                     <p className="text-xs text-amber-800">Delivered</p>
-                                    <p className="text-sm">{new Date(capsule.deliveredAt).toLocaleString()}</p>
+                                    <p className="text-sm">{formatDate(capsule.deliveryDate)}</p>
                                 </div>
                             </motion.div>
                         </motion.div>
