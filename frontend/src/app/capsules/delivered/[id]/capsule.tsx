@@ -14,6 +14,7 @@ import { formatDate } from '@/utils/formatDates'
 import LoadingSpinner from '@/components/gloabal/Spinner'
 import { useAuth } from '@/hooks/auth/useAuth'
 import { useRouter } from 'next/navigation'
+import { toast } from 'react-toastify'
 
 const CapsulePage = () => {
     const { id } = useParams<{ id: string }>()
@@ -28,7 +29,7 @@ const CapsulePage = () => {
     const [playPaper] = useSound('/sounds/paper.mp3')
     const [confirmShow, setConfirmShow] = useState(false)
 
-    const { capsule, capsuleError, capsuleLoading } = useCapsule(id)
+    const { capsule, capsuleError, capsuleLoading, deleteCapsule } = useCapsule(id)
     const { isAuthenticated } = useAuth()
 
     useEffect(() => {
@@ -49,7 +50,7 @@ const CapsulePage = () => {
         )
     }
 
-    if (!capsule || capsuleError) {
+    if (!capsule) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <p className="text-xl text-amber-500">Capsule not found</p>
@@ -80,7 +81,13 @@ const CapsulePage = () => {
 
     const handleDelete = (id: string) => {
         setConfirmShow(false)
-        alert(`Deleted capsule ${id}`)
+        deleteCapsule({ id }, {
+            onSuccess: () => {
+                toast.success('Capsule deleted')
+                router.push('/capsules/delivered')
+            },
+            onError: () => toast.error('Failed to delete capsule')
+        })
     }
 
     return (

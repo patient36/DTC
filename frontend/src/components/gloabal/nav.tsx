@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 const NavBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { logout, isAuthenticated } = useAuth();
+  const router = useRouter()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,9 +27,19 @@ const NavBar: React.FC = () => {
     { name: 'About', href: '/about' },
   ];
 
+  const handleLogout = () => {
+    try {
+      logout()
+      toast.success('Logged out')
+      router.push('/')
+    } catch (error: any) {
+      toast.error(error)
+    }
+  }
+
   const authSection = isAuthenticated ? (
     <button
-      onClick={() => logout()}
+      onClick={() => handleLogout()}
       className="flex items-center gap-2 px-4 py-2 rounded-lg text-amber-500 font-bold hover:bg-slate-700/50 transition-colors"
     >
       <FiLogOut className="text-amber-500" />

@@ -12,7 +12,8 @@ export const getCurrentUser = async () => {
 };
 
 export const logout = async () => {
-    await axios.post('/auth/logout');
+    const { data } = await axios.post('/auth/logout');
+    return data;
 };
 
 export const register = async ({ name, email, password, confirmPassword, }: RegisterFormValues) => {

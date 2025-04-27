@@ -14,7 +14,6 @@ const RegistrationForm = () => {
     const router = useRouter()
 
     const onSubmit = (data: RegisterFormValues) => {
-        console.log(data)
         registerUser(data, {
             onSuccess: () => {
                 toast.success('Account created successfully')

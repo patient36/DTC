@@ -6,6 +6,7 @@ import { GiScrollQuill, GiTimeBomb } from 'react-icons/gi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CapsuleFormValues, capsuleSchema } from '@/schemas/capsule.schema'
 import { useCapsuleForm } from '@/hooks/forms/useCapsuleForm'
+import { useCapsule } from '@/hooks/mutations/useCapsule'
 
 const NewCapsuleForm = () => {
     const { register, handleSubmit, setValue, formState: { errors } } = useCapsuleForm()
@@ -29,7 +30,7 @@ const NewCapsuleForm = () => {
             })
 
             setTimeEffect(true)
-            await new Promise(res => setTimeout(res, 2000))
+            await new Promise(res => setTimeout(res, 200))
 
             console.log("Capsule created:", validated)
             alert("Your time capsule has been launched to the future!")
