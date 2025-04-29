@@ -191,7 +191,6 @@ export class StripeService {
                 throw new Error('Failed to create subscription');
             }
 
-            // Update user in database
             await this.prisma.user.update({
                 where: { id: userId },
                 data: {

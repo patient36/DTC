@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, forwardRef } from 'react'
 import Image from 'next/image'
-import { FiRefreshCw, FiImage, FiVideo, FiDownload, FiFile } from 'react-icons/fi'
+import { FiImage, FiVideo, FiDownload, FiFile } from 'react-icons/fi'
+import { formatFileSize } from '@/utils/formatSize'
 import { IoMdRefresh } from 'react-icons/io'
 
 interface FileOpenerProps {
@@ -19,21 +20,6 @@ const FileOpener = forwardRef<HTMLVideoElement, FileOpenerProps>(
     const [loading, setLoading] = useState(true)
     const [unsupported, setUnsupported] = useState(false)
     const videoRef = useRef<HTMLVideoElement>(null)
-
-    const formatFileSize = (bytes: number): string => {
-      if (bytes === 0) return '0 Bytes'
-
-      const k = 1024
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-
-      if (bytes < 1) return `${bytes.toFixed(2)} Bytes`
-
-      const i = bytes < k ? 0 : Math.floor(Math.log(bytes) / Math.log(k))
-
-      const unitIndex = Math.min(i, sizes.length - 1)
-
-      return `${parseFloat((bytes / Math.pow(k, unitIndex)).toFixed(unitIndex > 0 ? 1 : 0))} ${sizes[unitIndex]}`
-    }
 
     useEffect(() => {
       const isSupported = type.startsWith('image') || type.startsWith('video')
@@ -98,7 +84,7 @@ const FileOpener = forwardRef<HTMLVideoElement, FileOpenerProps>(
                 onClick={handleRetry}
                 className="px-3 py-1.5 cursor-pointer bg-amber-600/70 hover:bg-amber-600/60 rounded-md text-blue-100 text-xs flex items-center gap-1 transition-colors mt-2"
               >
-                <IoMdRefresh/>
+                <IoMdRefresh />
                 Retry
               </button>
             </div>

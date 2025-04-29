@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiEye, FiEyeOff, FiFileText, FiImage, FiMusic, FiSettings, FiVideo } from "react-icons/fi";
 import { motion } from 'framer-motion';
 import { formatDate, formatTime } from "@/utils/formatDates";
-import { formatSize } from "@/utils/formatSize";
+import { formatFileSize } from "@/utils/formatSize";
 
 interface CapsulesTableProps {
   capsules: Capsule[];
@@ -178,8 +178,7 @@ const CapsulesTable = ({ capsules, page, rowsPerPage, total, onPageChange, onRow
                             className="px-2 py-1 bg-gray-700/50 rounded text-xs flex items-center"
                           >
                             <AttachmentIcon type={file.type} />
-                            <span className="truncate max-w-[80px]">{file.path}</span>
-                            <span className="text-gray-400 ml-1">{file.size}MB</span>
+                            <span className="truncate max-w-[80px]">Memory {i + 1}</span>
                           </div>
                         )) : '-'
                       }
@@ -189,7 +188,7 @@ const CapsulesTable = ({ capsules, page, rowsPerPage, total, onPageChange, onRow
                 {visibleColumns.attachmentsSize && (
                   <td className="px-4 py-4">
                     <div className="text-sm text-gray-300 max-w-xs truncate">
-                      {formatSize(capsule.attachmentsSize)}
+                      {formatFileSize(capsule.attachmentsSize)}
                     </div>
                   </td>
                 )}

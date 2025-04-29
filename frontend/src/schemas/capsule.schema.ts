@@ -14,7 +14,7 @@ export const capsuleSchema = z.object({
             message: "Delivery must be at least 3 months from now"
         })
         .transform((val) => new Date(val).toISOString()),
-    attachments: z.array(z.instanceof(File))
+    attachments: z.array(z.instanceof(File)).optional()
 })
 
 export type CapsuleFormValues = z.infer<typeof capsuleSchema>

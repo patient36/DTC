@@ -15,8 +15,10 @@ export class CapsulesService {
       const { userId } = user;
 
       if (new Date(dto.deliveryDate) < new Date(new Date().setMonth(new Date().getMonth() + 2))) {
-        throw new HttpException('Delivery date must be at least 2 months from now', HttpStatus.BAD_REQUEST);
+        throw new HttpException('Delivery date must be at least 3 months from now', HttpStatus.BAD_REQUEST);
       }
+
+      const deliveryDate = new Date(dto.deliveryDate);
 
       const attachments = files?.length
         ? await Promise.all(
@@ -39,7 +41,7 @@ export class CapsulesService {
           message: encrypt(dto.message, userId),
           attachments,
           attachmentsSize: totalSizeGB,
-          deliveryDate: dto.deliveryDate,
+          deliveryDate
         },
       });
 

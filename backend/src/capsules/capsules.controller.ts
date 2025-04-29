@@ -17,7 +17,7 @@ export class CapsulesController {
 
   @Post('/create')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
+    FilesInterceptor('attachments', 50, {
       fileFilter: (req, file, cb) => {
         if (isMediaFile(file.mimetype)) cb(null, true);
         else cb(null, false);

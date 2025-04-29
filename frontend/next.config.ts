@@ -5,12 +5,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
+        hostname: 'dtcbucket1.s3.eu-north-1.amazonaws.com',
+        pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'www.w3schools.com',
-      },
+
     ],
   },
 }

@@ -165,7 +165,7 @@ const CapsulePage = () => {
                             variants={item}
                             className="flex items-center justify-center gap-2 mb-4 text-lg font-semibold text-amber-300"
                         >
-                            <FaCamera /> Attachments from {formatDate(capsule.deliveryDate)}
+                            <FaCamera /> Attachments from {formatDate(capsule.createdAt)}
                         </motion.div>
                         <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                             {capsule.attachments.map((att) => (

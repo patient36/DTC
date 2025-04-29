@@ -1,7 +1,11 @@
 import axios from '@/lib/axios.config';
 
-export const createCapsule = async () => {
-    const { data } = await axios.post('/capsules/create');
+export const createCapsule = async (capsule: FormData) => {
+    const { data } = await axios.post('/capsules/create', capsule, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
     return data;
 };
 

@@ -1,18 +1,24 @@
 'use client'
-import { useState } from 'react'
-import { z } from 'zod'
+import { useEffect, useState } from 'react'
 import { FaPaperPlane, FaClock, FaCalendarAlt, FaFileUpload } from 'react-icons/fa'
 import { GiScrollQuill, GiTimeBomb } from 'react-icons/gi'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CapsuleFormValues, capsuleSchema } from '@/schemas/capsule.schema'
+import { CapsuleFormValues } from '@/schemas/capsule.schema'
 import { useCapsuleForm } from '@/hooks/forms/useCapsuleForm'
 import { useCapsule } from '@/hooks/mutations/useCapsule'
+import { toast } from 'react-toastify'
+import { useAuth } from '@/hooks/auth/useAuth'
+import { useRouter } from 'next/navigation'
+import LoadingSpinner from '../gloabal/Spinner'
 
 const NewCapsuleForm = () => {
-    const { register, handleSubmit, setValue, formState: { errors } } = useCapsuleForm()
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const router = useRouter()
+    const { register, handleSubmit, setValue, formState: { errors },reset } = useCapsuleForm()
     const [timeEffect, setTimeEffect] = useState(false)
     const [attachments, setAttachments] = useState<File[]>([])
+
+    const { createCapsule, isCreating } = useCapsule()
+    const { isAuthenticated, isLoading } = useAuth()
 
     const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files ? Array.from(e.target.files) : []
@@ -21,27 +27,42 @@ const NewCapsuleForm = () => {
     }
 
     const onSubmit = async (data: CapsuleFormValues) => {
-        setIsSubmitting(true)
-        try {
-            const validated = capsuleSchema.parse({
-                ...data,
-                deliveryDate: new Date(data.deliveryDate).toISOString(),
-                attachments
-            })
+        setTimeEffect(true);
 
-            setTimeEffect(true)
-            await new Promise(res => setTimeout(res, 200))
+        const formData = new FormData();
+        formData.append('title', data.title);
+        formData.append('message', data.message);
+        formData.append('deliveryDate', data.deliveryDate);
 
-            console.log("Capsule created:", validated)
-            alert("Your time capsule has been launched to the future!")
-        } catch (err) {
-            if (err instanceof z.ZodError) {
-                console.error('Validation failed:', err)
-            }
-        } finally {
-            setTimeEffect(false)
-            setIsSubmitting(false)
+        attachments.forEach(file => {
+            formData.append('attachments', file);
+        });
+
+        createCapsule(formData, {
+            onSuccess: () => {
+                toast.success("Capsule launched to the future!");
+                reset();
+                setAttachments([]);
+            },
+            onError: () => {
+                toast.error('Failed to send capsule.');
+            },
+            onSettled: () => {
+                setTimeEffect(false);
+            },
+        });
+    };
+
+
+
+    useEffect(() => {
+        if (!isAuthenticated && !isLoading) {
+            router.push('/');
         }
+    }, [isAuthenticated, isLoading]);
+
+    if (isLoading) {
+        return <LoadingSpinner />
     }
 
     const deliveryMinDate = new Date(new Date().setMonth(new Date().getMonth() + 3))
@@ -164,12 +185,12 @@ const NewCapsuleForm = () => {
                     {/* Submit */}
                     <motion.button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isCreating}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="w-full mt-8 py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg font-bold text-lg shadow-lg hover:shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {isSubmitting ? (
+                        {isCreating ? (
                             <span className="flex items-center justify-center gap-2">
                                 <motion.span
                                     animate={{ rotate: 360 }}
