@@ -7,15 +7,13 @@ import { AuthDto } from './dto/auth.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Response } from 'express';
-import { StripeService } from 'src/billing/stripe/stripe.service';
 import { AuthedUser } from 'src/common/types/currentUser';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly MailService: MailService,
-    private readonly stripe: StripeService
+    private readonly MailService: MailService
   ) { }
 
   // Login
@@ -91,9 +89,6 @@ export class AuthService {
         </div>
       `
     );
-
-    // create new stripe customer
-    await this.stripe.attachCustomer(newUser.id, newUser.email)
 
     const { password, ...safeUser } = newUser
     return { user: safeUser };

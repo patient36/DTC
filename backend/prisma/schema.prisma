@@ -36,7 +36,7 @@ model User {
   customerId      String?   @unique
   subscriptionId  String?
   paymentMethodId String?
-  paidUntil       DateTime?
+  paidUntil       DateTime  @default(now())
   createdAt       DateTime  @default(now())
   Capsule         Capsule[]
   Payment         Payment[]

@@ -14,7 +14,9 @@ interface SubscriptionUser {
 @Injectable()
 export class BillingService {
     private readonly logger = new Logger(BillingService.name);
-    private readonly stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+    private readonly stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2025-03-31.basil',
+    });
 
     constructor(private readonly prisma: PrismaService) { }
 

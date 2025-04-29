@@ -54,7 +54,7 @@ export class UsersService {
       }
 
       // delete stripe customer
-      await this.stripe.deleteCustomer(user.id).catch(console.error);
+      await this.stripe.deleteCustomer(user.id)
 
       const [deletedPayments] = await this.prisma.$transaction([
         this.prisma.payment.deleteMany({ where: { payerId: user.id } }),

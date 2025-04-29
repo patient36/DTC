@@ -5,11 +5,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { MailModule } from 'src/mail/mail.module';
-import { StripeService } from 'src/billing/stripe/stripe.service';
 
 @Module({
   imports: [PrismaModule, MailModule],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, StripeService],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard],
   controllers: [AuthController],
 })
 export class AuthModule { }

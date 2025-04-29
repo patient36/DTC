@@ -168,9 +168,6 @@ export class AdminService {
         )
       );
 
-      // save admin as a client
-      await this.stripe.attachCustomer(admin.id, admin.email);
-
       const { password, ...adminSafe } = admin;
       return { admin: adminSafe };
     } catch (error) {

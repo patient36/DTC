@@ -13,64 +13,89 @@ export class StripeService {
 
 
     constructor(private readonly prisma: PrismaService) {
-        this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+        this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+            apiVersion: '2025-03-31.basil',
+        });
         this.priceId = process.env.STRIPE_PRICE_ID!;
     }
 
-    async attachCard(body: AttachCardDto, user: AuthedUser) {
-        const userInDb = await this.prisma.user.findUnique({
-            where: { id: user.userId }
+    async attachCard(body: AttachCardDto, AuthedUser: AuthedUser) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: AuthedUser.userId }
         });
 
-        if (!userInDb) throw new NotFoundException('User not found');
-
-        // Handle Stripe customer creation or retrieval
-        let stripeCustomerId = userInDb.customerId;
-        if (!stripeCustomerId) {
+        if (!user) throw new NotFoundException('User not found');
+        // 1.Create customer
+        let customerId = user.customerId;
+        if (customerId) {
+            try {
+                const customer = await this.stripe.customers.retrieve(customerId);
+                if (customer.deleted) {
+                    customerId = null;
+                }
+            } catch (error) {
+                customerId = null;
+            }
+        }
+        if (!customerId) {
             const customer = await this.stripe.customers.create({
-                email: userInDb.email,
-                metadata: { userId: userInDb.id },
-            });
-            stripeCustomerId = customer.id;
-
+                email: user.email,
+                metadata: { userId: user.id }
+            })
+            customerId = customer.id;
             await this.prisma.user.update({
-                where: { id: user.userId },
-                data: { customerId: stripeCustomerId },
+                where: { id: AuthedUser.userId },
+                data: { customerId }
             });
         }
 
-        // Attach payment method
-        const paymentMethod = await this.stripe.paymentMethods.attach(
-            body.paymentMethodId,
-            { customer: stripeCustomerId }
-        );
-
-        // Set as default payment method
-        await this.stripe.customers.update(stripeCustomerId, {
-            invoice_settings: { default_payment_method: paymentMethod.id },
+        // 2.Attach payment method
+        await this.stripe.paymentMethods.attach(body.paymentMethodId, {
+            customer: customerId
         });
 
-        // Update user with payment method
-        await this.prisma.user.update({
-            where: { id: user.userId },
-            data: { paymentMethodId: paymentMethod.id },
-        });
+        // 3.Set default payment method
+        await this.stripe.customers.update(customerId, {
+            invoice_settings: {
+                default_payment_method: body.paymentMethodId
+            }
+        })
 
-        // Create subscription if doesn't exist
-        if (!userInDb.subscriptionId) {
-            const subscription = await this.stripe.subscriptions.create({
-                customer: stripeCustomerId,
-                items: [{ price: this.priceId }],
-                default_payment_method: paymentMethod.id
+        // 4.Create subscription
+        let subscriptionId = user.subscriptionId;
+        let subscription: Stripe.Subscription | null = null;
+
+        if (subscriptionId) {
+            try {
+                subscription = await this.stripe.subscriptions.retrieve(subscriptionId);
+                if(subscription.status !== 'active'){
+                    subscriptionId = null;
+                }
+            } catch {
+                subscriptionId = null;
+            }
+        }
+
+        if (!subscriptionId) {
+            subscription = await this.stripe.subscriptions.create({
+                customer: customerId,
+                items: [{ price: this.priceId}],
+                payment_behavior: 'default_incomplete',
+                expand: ['latest_invoice'],
             });
 
+            subscriptionId = subscription.id;
+
             await this.prisma.user.update({
-                where: { id: user.userId },
-                data: { subscriptionId: subscription.id },
+                where: { id: AuthedUser.userId },
+                data: { subscriptionId },
             });
         }
 
-        return paymentMethod;
+        const paymentIntent = (subscription?.latest_invoice as any)?.payment_intent as Stripe.PaymentIntent | undefined;
+
+        return { clientSecret: paymentIntent?.client_secret || null };
+
     }
 
     async handleWebhook(rawBody: Buffer, sig: string): Promise<WebhookResponse> {
@@ -90,10 +115,12 @@ export class StripeService {
         try {
             switch (event.type) {
                 case 'payment_intent.succeeded':
-                    await this.handlePaymentSuccess(event.data.object);
+                    console.log('PaymentIntent was successful!');
+                    // await this.handlePaymentSuccess(event.data.object);
                     break;
                 case 'payment_intent.payment_failed':
-                    await this.handlePaymentFailure(event.data.object);
+                    console.log('PaymentIntent failed!');
+                    // await this.handlePaymentFailure(event.data.object);
                     break;
                 default:
                     this.logger.debug(`Unhandled event type: ${event.type}`);
@@ -144,66 +171,9 @@ export class StripeService {
             throw new Error('Invalid customer ID in failed payment');
         }
 
-        await this.prisma.user.updateMany({
-            where: { customerId: paymentIntent.customer },
-            data: { paidUntil: null }
-        });
+        // mail payer
 
         this.logger.warn(`Payment failed for customer ${paymentIntent.customer}`);
-    }
-
-    async attachCustomer(userId: string, email: string): Promise<string> {
-        if (!userId || !email) {
-            throw new Error('Missing required parameters: userId and email must be provided');
-        }
-
-        try {
-            const user = await this.prisma.user.findUnique({ where: { id: userId } });
-            if (!user) throw new Error('User not found');
-
-            if (user.customerId) {
-                try {
-                    await this.stripe.customers.retrieve(user.customerId);
-                    return user.customerId;
-                } catch (error) {
-                    console.warn(`Existing customer ${user.customerId} not found in Stripe, creating new one`);
-                }
-            }
-
-            const customer = await this.stripe.customers.create({
-                email,
-                metadata: { userId },
-            });
-
-            let subscription;
-            try {
-                subscription = await this.stripe.subscriptions.create({
-                    customer: customer.id,
-                    items: [{ price: this.priceId }],
-                    payment_behavior: 'default_incomplete',
-                    expand: ['latest_invoice.payment_intent'],
-                });
-            } catch (subscriptionError) {
-                console.error('Subscription creation failed, deleting customer', subscriptionError);
-                await this.stripe.customers.del(customer.id).catch(cleanupError => {
-                    console.error('Failed to cleanup customer after subscription failure:', cleanupError);
-                });
-                throw new Error('Failed to create subscription');
-            }
-
-            await this.prisma.user.update({
-                where: { id: userId },
-                data: {
-                    customerId: customer.id,
-                    subscriptionId: subscription.id,
-                },
-            });
-
-            return customer.id;
-        } catch (error) {
-            console.error('Error in attachCustomer:', error);
-            throw new Error(`Failed to attach customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
     }
 
     async syncCustomerEmail(userId: string, email: string): Promise<void> {

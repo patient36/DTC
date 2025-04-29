@@ -38,10 +38,11 @@ const CardForm = () => {
 
             if (error || !paymentMethod) throw error || new Error('Payment method creation failed')
 
-            const res = await fetch('/api/attach-card', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API}/payment/card/default`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ paymentMethodId: paymentMethod.id }),
+                credentials: 'include',
             })
 
             const resData = await res.json()
