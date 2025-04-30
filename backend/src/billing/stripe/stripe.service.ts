@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { AttachCardDto } from '../dto/attach-card.dto';
 import { AuthedUser } from 'src/common/types/currentUser';
 import { WebhookResponse } from './types';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class StripeService {
@@ -12,7 +13,7 @@ export class StripeService {
     private readonly logger = new Logger(StripeService.name)
 
 
-    constructor(private readonly prisma: PrismaService) {
+    constructor(private readonly prisma: PrismaService, private readonly MailService: MailService) {
         this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
             apiVersion: '2025-03-31.basil',
         });
@@ -39,6 +40,8 @@ export class StripeService {
         }
         if (!customerId) {
             const customer = await this.stripe.customers.create({
+                name: user.name,
+                description: 'DTC Storage customer',
                 email: user.email,
                 metadata: { userId: user.id }
             })
@@ -68,7 +71,7 @@ export class StripeService {
         if (subscriptionId) {
             try {
                 subscription = await this.stripe.subscriptions.retrieve(subscriptionId);
-                if(subscription.status !== 'active'){
+                if (subscription.status !== 'active') {
                     subscriptionId = null;
                 }
             } catch {
@@ -79,7 +82,7 @@ export class StripeService {
         if (!subscriptionId) {
             subscription = await this.stripe.subscriptions.create({
                 customer: customerId,
-                items: [{ price: this.priceId}],
+                items: [{ price: this.priceId }],
                 payment_behavior: 'default_incomplete',
                 expand: ['latest_invoice'],
             });
@@ -105,75 +108,67 @@ export class StripeService {
         }
 
         let event: Stripe.Event;
+        await this.MailService.sendEmail('example@mail.com', '', '')
         try {
-            event = this.stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+            event = this.stripe.webhooks.constructEvent(
+                rawBody,
+                sig,
+                endpointSecret
+            );
         } catch (err) {
             this.logger.error('Webhook verification failed', err);
-            return { received: false, message: 'Invalid signature' };
+            throw new Error('Webhook verification failed');
+        }
+
+        switch (event.type) {
+            case 'invoice.payment_succeeded':
+                this.handleSuccessfulPayment(event.data.object as Stripe.Invoice);
+                break;
+
+            case 'invoice.payment_failed':
+                this.handleFailedPayment(event.data.object as Stripe.Invoice);
+                break;
+
+            default:
+                this.logger.warn(`Unhandled event type: ${event.type}`);
+        }
+
+        return { received: true };
+    }
+
+    private async handleSuccessfulPayment(invoice: Stripe.Invoice) {
+        const customerId = invoice.customer as string;
+        const subscriptionId = invoice.metadata?.subscriptionId || null;
+        this.logger.log(`Payment succeeded for customer ${customerId}`);
+        const user = await this.prisma.user.findUnique({ where: { customerId } })
+        if (!user) {
+            throw new NotFoundException('User not found for the given customer ID');
+        }
+
+        const payment = await this.prisma.payment.create({
+            data: {
+                payerId: user.id,
+                paymentId: invoice.id || '',
+                description: invoice.description || '',
+                status: "COMPLETED",
+            }
+        })
+        return { message: 'Payment successful' }
+    }
+
+    private async handleFailedPayment(invoice: Stripe.Invoice) {
+        const customerId = invoice.customer as string;
+
+        const user = await this.prisma.user.findUnique({ where: { customerId } })
+        if (!user) {
+            // cancel this subscription and delete customer
         }
 
         try {
-            switch (event.type) {
-                case 'payment_intent.succeeded':
-                    console.log('PaymentIntent was successful!');
-                    // await this.handlePaymentSuccess(event.data.object);
-                    break;
-                case 'payment_intent.payment_failed':
-                    console.log('PaymentIntent failed!');
-                    // await this.handlePaymentFailure(event.data.object);
-                    break;
-                default:
-                    this.logger.debug(`Unhandled event type: ${event.type}`);
-            }
-            return { received: true };
+            // mail user that we cant reach their card
         } catch (error) {
-            this.logger.error(`Webhook processing failed: ${error}`);
-            return { received: false, message: 'Processing failed' };
+            this.logger.warn(error)
         }
-    }
-
-    private async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promise<void> {
-        if (typeof paymentIntent.customer !== 'string') {
-            throw new Error('Invalid customer ID in payment intent');
-        }
-
-        const userId = paymentIntent.metadata?.userId;
-        if (!userId) {
-            throw new Error('Missing user ID in payment metadata');
-        }
-
-        await this.prisma.$transaction(async (tx) => {
-            // Record payment
-            await tx.payment.create({
-                data: {
-                    payerId: userId,
-                    paymentId: paymentIntent.id,
-                    amount: paymentIntent.amount / 100,
-                    status: 'COMPLETED',
-                    description: paymentIntent.description || 'Storage payment'
-                }
-            });
-
-            // Update user access
-            await tx.user.update({
-                where: { id: userId },
-                data: {
-                    paidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // +30 days
-                }
-            });
-        });
-
-        this.logger.log(`Processed successful payment ${paymentIntent.id}`);
-    }
-
-    private async handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promise<void> {
-        if (typeof paymentIntent.customer !== 'string') {
-            throw new Error('Invalid customer ID in failed payment');
-        }
-
-        // mail payer
-
-        this.logger.warn(`Payment failed for customer ${paymentIntent.customer}`);
     }
 
     async syncCustomerEmail(userId: string, email: string): Promise<void> {

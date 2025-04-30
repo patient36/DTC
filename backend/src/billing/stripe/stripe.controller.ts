@@ -27,10 +27,15 @@ export class StripeController {
     @Post('webhook')
     webhook(
         @Req() req: RawBodyRequest<Request>,
-        @Headers('stripe-signature') sig: string,
+        @Headers('stripe-signature') sig: string
     ) {
-        if (!req.rawBody) throw new Error('Missing raw body');
+        const rawBody = req.body as Buffer;
+        if (!rawBody || !Buffer.isBuffer(rawBody)) {
+            console.error('Missing or invalid raw body for Stripe webhook');
+            return { received: false, message: 'Missing or invalid raw body' };
+        }
 
-        return this.stripeService.handleWebhook(req.rawBody, sig);
+        return this.stripeService.handleWebhook(rawBody, sig);
     }
+
 }
