@@ -15,8 +15,8 @@ export class AdminController {
 
   // Get an admin registration token
   @Post('/get-token')
-  getAdminToken(@CurrentUser() user: AuthedUser) {
-    return this.adminService.getAdminToken(user)
+  getAdminToken(@CurrentUser() user: AuthedUser, password: string) {
+    return this.adminService.getAdminToken(user, password)
   }
 
   // Register admin

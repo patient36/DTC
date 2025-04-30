@@ -19,8 +19,19 @@ export class AdminService {
   ) { }
 
   // Get an admin registration token
-  async getAdminToken(user: AuthedUser) {
+  async getAdminToken(user: AuthedUser, password: string) {
     try {
+      const admin = await this.prisma.user.findUnique({ where: { id: user.userId } })
+      if (!admin) {
+        throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
+      }
+      if (!password) {
+        throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
+      }
+      const isPasswordValid = await bcrypt.compare(password, admin.password);
+      if (!isPasswordValid) {
+        throw new HttpException('Wrong password', HttpStatus.BAD_REQUEST);
+      }
       const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET as string, {
         expiresIn: '1h',
       });
@@ -259,7 +270,7 @@ export class AdminService {
           deletedFilesCount++;
         }
       }
-    
+
       //delete stripe customer
       await this.stripe.deleteCustomer(user.id)
 
