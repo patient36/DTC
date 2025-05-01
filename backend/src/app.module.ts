@@ -11,9 +11,10 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { CapsulesModule } from './capsules/capsules.module';
 import { AdminModule } from './admin/admin.module';
 import { BillingModule } from './billing/billing.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, AuthModule, CapsulesModule, AdminModule, BillingModule],
+  imports: [ConfigModule.forRoot(), UsersModule, AuthModule, CapsulesModule, AdminModule, BillingModule, TasksModule],
   controllers: [AppController],
   providers: [AppService, PrismaService, MailService, {
     provide: APP_GUARD,

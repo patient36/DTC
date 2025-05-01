@@ -3,8 +3,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { CapsulesService } from '../capsules/capsules.service';
 
 @Injectable()
-export class DeliveryTasksService {
-    private readonly logger = new Logger(DeliveryTasksService.name);
+export class TasksService {
+    private readonly logger = new Logger(TasksService.name);
 
     constructor(private readonly capsulesService: CapsulesService) { }
 
@@ -14,7 +14,8 @@ export class DeliveryTasksService {
 
         try {
             const result = await this.capsulesService.markDueCapsulesAsDelivered();
-            console.log(`Marked ${result.count} capsules as delivered`);
+            const { count } = result || { count: 0 };
+            console.log(`Marked ${count} capsules as delivered`);
         } catch (error) {
             console.error('Failed to update capsule deliveries', error.stack);
         }

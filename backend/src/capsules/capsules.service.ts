@@ -4,11 +4,12 @@ import { S3Service } from 'src/s3/s3.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { encrypt, decrypt } from 'src/common/utils/crypto';
 import { AuthedUser } from 'src/common/types/currentUser';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class CapsulesService {
 
-  constructor(private readonly prisma: PrismaService, private readonly S3Service: S3Service) { }
+  constructor(private readonly prisma: PrismaService, private readonly S3Service: S3Service, private readonly mailService: MailService) { }
 
   async create(dto: CreateCapsuleDto, files: Express.Multer.File[], user: AuthedUser) {
     try {
@@ -235,23 +236,51 @@ export class CapsulesService {
   }
 
   async markDueCapsulesAsDelivered() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
 
-    return this.prisma.capsule.updateMany({
-      where: {
-        deliveryDate: {
-          gte: today,
-          lt: tomorrow,
+      const dueCapsules = await this.prisma.capsule.findMany({
+        where: {
+          deliveryDate: { gte: today, lt: tomorrow },
+          delivered: false,
         },
-        delivered: false,
-      },
-      data: {
-        delivered: true,
-      },
-    });
+        select: { owner: { select: { email: true } } },
+      });
+
+      if (!dueCapsules.length) return;
+
+      const emailBody = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: #333;">
+          <h2 style="color: #2a7ae4;">🎁 Your Capsule is Ready!</h2>
+          <p style="font-size: 16px;">Check your account to discover what's inside — we’ve prepared something special just for you.</p>
+          <a href="${process.env.CLIENT_URL}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #2a7ae4; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Access Your Account
+          </a>
+          <p style="font-size: 16px;">Thank you for choosing our service!</p>
+          <p style="margin-top: 40px;">Best regards,<br><strong>The DTC Team</strong></p>
+        </div>
+      `;
+
+      await Promise.all(
+        dueCapsules.map(({ owner }) =>
+          this.mailService.sendEmail(owner.email, 'Capsule delivery notification', emailBody)
+        )
+      );
+
+      return this.prisma.capsule.updateMany({
+        where: {
+          deliveryDate: { gte: today, lt: tomorrow },
+          delivered: false,
+        },
+        data: { delivered: true },
+      });
+    } catch (error) {
+      console.error('Error in markDueCapsulesAsDelivered:', error.stack || error.message);
+    }
   }
+
 }

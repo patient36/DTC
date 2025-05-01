@@ -3,12 +3,12 @@ import { CapsulesService } from './capsules.service';
 import { CapsulesController } from './capsules.controller';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { S3Module } from 'src/s3/s3.module';
-import { DeliveryTasksService } from 'src/tasks/delivery.task.service';
-import { ScheduleModule } from '@nestjs/schedule';
+import { MailService } from 'src/mail/mail.service';
 
 @Module({
-  imports: [S3Module, ScheduleModule.forRoot(),],
+  imports: [S3Module],
   controllers: [CapsulesController],
-  providers: [CapsulesService, PrismaService, DeliveryTasksService],
+  providers: [CapsulesService, PrismaService, MailService],
+  exports: [CapsulesService],
 })
 export class CapsulesModule { }
