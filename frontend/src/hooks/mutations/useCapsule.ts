@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getCapsuleById, deleteCapsule, createCapsule } from '@/services/capsulesServce';
+import { getCapsuleById, deleteCapsule, createCapsule } from '@/services/capsulesService';
 import { Capsule } from '@/types/capsule';
 
 export const useCapsule = (id?: string) => {

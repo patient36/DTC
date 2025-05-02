@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getCapsules } from '@/services/capsulesServce';
+import { getCapsules } from '@/services/capsulesService';
 import { CapsulesResponse } from '@/types/capsule';
 
 export const useCapsules = (page = 1, limit = 10) => {
