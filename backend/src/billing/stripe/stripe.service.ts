@@ -148,7 +148,7 @@ export class StripeService {
             data: {
                 payerId: user.id,
                 paymentId: invoice.id || '',
-                description: invoice.description || '',
+                description: 'Monthly fee for DTC Storage',
                 status: "COMPLETED",
                 amount: invoice.amount_paid || 0,
             }
@@ -188,7 +188,7 @@ export class StripeService {
                 data: {
                     payerId: user.id,
                     paymentId: invoice.id || '',
-                    description: invoice.description || '',
+                    description: 'Monthly fee for DTC Storage',
                     status: "FAILED",
                     amount: invoice.amount_paid || 0,
                 }

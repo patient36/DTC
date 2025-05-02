@@ -76,7 +76,7 @@ export class BillingService {
 
             try {
                 await this.stripe.billing.meterEvents.create({
-                    event_name: 'DTC-STORAGE-EVENT',
+                    event_name: process.env.STRIPE_EVENT_NAME!,
                     timestamp: Math.floor(Date.now() / 1000),
                     payload: {
                         value: `${Math.max(0, parseFloat(user.usedStorage.toFixed(6)))}`,
