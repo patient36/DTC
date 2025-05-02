@@ -35,7 +35,6 @@ model User {
   usedStorage     Float     @default(0.0) //GBs
   customerId      String?   @unique
   subscriptionId  String?
-  paymentMethodId String?
   paidUntil       DateTime  @default(now())
   createdAt       DateTime  @default(now())
   Capsule         Capsule[]
