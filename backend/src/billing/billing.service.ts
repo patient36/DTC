@@ -46,7 +46,7 @@ export class BillingService {
             where: {
                 paidUntil: { lte: cutoff },
                 subscriptionId: { not: null },
-                usedStorage: { gt: -0.1 },
+                usedStorage: { gt: 0.1 },
                 customerId: { not: null },
             },
             select: {
