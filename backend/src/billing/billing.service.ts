@@ -5,7 +5,7 @@ import Stripe from 'stripe';
 
 interface SubscriptionUser {
     id: string;
-    stripeSubscriptionId: string;
+    subscriptionId: string;
     usedStorage: number;
     customerId: string;
     email: string;
@@ -46,7 +46,7 @@ export class BillingService {
             where: {
                 paidUntil: { lte: cutoff },
                 subscriptionId: { not: null },
-                usedStorage: { gt: 0 },
+                usedStorage: { gt: -0.1 },
                 customerId: { not: null },
             },
             select: {
@@ -60,7 +60,7 @@ export class BillingService {
 
         return users.map(user => ({
             id: user.id,
-            stripeSubscriptionId: user.subscriptionId!,
+            subscriptionId: user.subscriptionId!,
             usedStorage: user.usedStorage,
             email: user.email,
             customerId: user.customerId!,
@@ -68,31 +68,43 @@ export class BillingService {
     }
 
     private async reportUsageAndInvoice(user: SubscriptionUser): Promise<void> {
-        try {
-            const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
-                expand: ['items.data.price.product'],
-            });
+        const maxRetries = 5;
+        const retryDelay = 1500;
 
-            const storageItem = subscription.items.data.find(item => {
-                const product = item.price.product as Stripe.Product;
-                return product.metadata?.usage_type === 'storage';
-            });
+        const makeRequest = async (retries: number): Promise<void> => {
+            this.logger.log(`Attempting report usage for ${user.id}, Retries left: ${retries}`);
 
-            if (!storageItem) {
-                throw new Error(`No 'storage' item in subscription ${user.stripeSubscriptionId}`);
+            try {
+                await this.stripe.billing.meterEvents.create({
+                    event_name: 'DTC-STORAGE-EVENT',
+                    timestamp: Math.floor(Date.now() / 1000),
+                    payload: {
+                        value: `${Math.max(0, parseFloat(user.usedStorage.toFixed(6)))}`,
+                        stripe_customer_id: user.customerId,
+                    },
+                });
+
+                this.logger.log(`Successfully reported ${user.usedStorage}GB for ${user.id}`);
+            } catch (error) {
+                if (retries > 0) {
+                    const delay = retryDelay * Math.pow(2, maxRetries - retries);
+                    this.logger.warn(`Retrying usage report for ${user.id}. Retries left: ${retries}. Next retry in ${delay}ms`);
+
+                    await new Promise(resolve => setTimeout(resolve, delay));
+
+                    await makeRequest(retries - 1);
+                } else {
+                    this.logger.error(`Usage report failed for ${user.id}`, {
+                        error: error instanceof Error ? error.message : String(error),
+                        subscriptionId: user.subscriptionId,
+                        stack: error instanceof Error ? error.stack : undefined,
+                    });
+
+                    throw error;
+                }
             }
+        };
 
-            await (this.stripe.subscriptionItems as any).createUsageRecord(storageItem.id, {
-                quantity: Math.round(user.usedStorage),
-                timestamp: Math.floor(Date.now() / 1000),
-                action: 'set',
-            });
-
-            this.logger.log(`Reported ${user.usedStorage}GB for user ${user.id}`);
-        } catch (error) {
-            this.logger.error(`Usage report failed for user ${user.id}`, error instanceof Error ? error.stack : error);
-            throw error;
-        }
+        await makeRequest(maxRetries);
     }
-
 }

@@ -127,7 +127,7 @@ export class UsersService {
       });
 
       // update stripe customer
-      await this.stripe.syncCustomerEmail(updatedUser.id, updatedUser.email);
+      await this.stripe.syncCustomerData(updatedUser.id, updatedUser.email, updatedUser.name);
 
       const { password: _, ...safeUser } = updatedUser
       return safeUser;

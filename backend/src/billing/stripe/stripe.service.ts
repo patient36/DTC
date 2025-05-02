@@ -108,7 +108,6 @@ export class StripeService {
         }
 
         let event: Stripe.Event;
-        await this.MailService.sendEmail('example@mail.com', '', '')
         try {
             event = this.stripe.webhooks.constructEvent(
                 rawBody,
@@ -151,8 +150,28 @@ export class StripeService {
                 paymentId: invoice.id || '',
                 description: invoice.description || '',
                 status: "COMPLETED",
+                amount: invoice.amount_paid || 0,
             }
         })
+        const body = `
+        <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 6px;">
+                <tr>
+                    <td>
+                        <h2 style="color: #2a9d8f;">Payment Successful</h2>
+                        <p>Hi ${user.name},</p>
+                        <p>We are pleased to inform you that your payment for this month on DTC was successful!</p>
+                        <p>Your service will continue without any interruption.</p>
+                        <strong>Thank you for being a valued customer!</strong><br>
+                        <a href="${process.env.CLIENT_URL}/dashboard" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background-color: #2a9d8f; color: #ffffff; text-decoration: none; border-radius: 4px;">Visit your dashboard</a>
+                        <p style="margin-top: 30px; font-size: 12px; color: #888;">If you have any questions, feel free to reach out to our support team.</p>
+                        <p style="margin-top: 30px; font-size: 12px; color: #888;">A record of this payment with an ID of ${payment.id} has been created and you can find it in your dashboard.</p>
+                    </td>
+                </tr>
+            </table>
+        </body>`
+        
+        await this.MailService.sendEmail(user.email, "Payment Successful", body);
         return { message: 'Payment successful' }
     }
 
@@ -161,27 +180,62 @@ export class StripeService {
 
         const user = await this.prisma.user.findUnique({ where: { customerId } })
         if (!user) {
-            // cancel this subscription and delete customer
+            throw new NotFoundException('User not found for the given customer ID');
         }
 
         try {
-            // mail user that we cant reach their card
+            const payment = await this.prisma.payment.create({
+                data: {
+                    payerId: user.id,
+                    paymentId: invoice.id || '',
+                    description: invoice.description || '',
+                    status: "FAILED",
+                    amount: invoice.amount_paid || 0,
+                }
+            })
+            const body = `
+            <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 6px;">
+                    <tr>
+                    <td>
+                        <h2 style="color: #e63946;">Payment Failed</h2>
+                        <p>Hi ${user.name},</p>
+                        <p>Your payment for this month on DTC was not successful.</p>
+                        <p>Please update your payment method to avoid interruption of service.</p>
+                        <strong>Login your account to update your payment method</strong>
+                        <a href="${process.env.CLIENT_URL}/payment" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background-color: #0070f3; color: #ffffff; text-decoration: none; border-radius: 4px;">If you are already logged in click here</a>
+                        <p style="margin-top: 30px; font-size: 12px; color: #888;">If you've already resolved this, you can ignore this email. A reocrd of a failed payment with an ID of ${payment.id} has been created and you cna find it in your dashboard.</p>
+                    </td>
+                    </tr>
+                </table>
+            </body>`
+            await this.MailService.sendEmail(user.email, "Payment Failed", body);
+            this.logger.log(`Payment failed for customer ${customerId}`);
+            return { message: 'Payment failed' }
         } catch (error) {
             this.logger.warn(error)
         }
     }
 
-    async syncCustomerEmail(userId: string, email: string): Promise<void> {
+    async syncCustomerData(userId: string, email: string, name: string): Promise<void> {
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!user?.customerId) return;
 
         const customer = await this.stripe.customers.retrieve(user.customerId);
-        if (
-            typeof customer === 'object' &&
-            'email' in customer &&
-            customer.email !== email
-        ) {
-            await this.stripe.customers.update(user.customerId, { email });
+        if (typeof customer !== 'object' || (customer as any).deleted) return;
+
+        const updates: { email?: string; name?: string } = {};
+
+        if ('email' in customer && customer.email !== email) {
+            updates.email = email;
+        }
+
+        if ('name' in customer && customer.name !== name) {
+            updates.name = name;
+        }
+
+        if (Object.keys(updates).length) {
+            await this.stripe.customers.update(user.customerId, updates);
         }
     }
 
@@ -190,17 +244,8 @@ export class StripeService {
         if (!user?.customerId) return;
 
         try {
-            if (user.subscriptionId) {
-                const subscription = await this.stripe.subscriptions.retrieve(user.subscriptionId);
-
-                if (subscription.status === 'active') {
-                    await this.stripe.subscriptions.update(user.subscriptionId, {
-                        cancel_at_period_end: true
-                    });
-                } else {
-                    await this.stripe.subscriptions.cancel(user.subscriptionId);
-                }
-            }
+            const customer = await this.stripe.customers.retrieve(user.customerId);
+            if (!customer || (customer as any).deleted) return;
 
             await this.stripe.customers.del(user.customerId);
 
