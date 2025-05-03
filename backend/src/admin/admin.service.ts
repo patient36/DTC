@@ -202,18 +202,44 @@ export class AdminService {
     const users = await this.prisma.user.findMany({
       skip,
       take: limit,
+      where: {
+        role: "USER"
+      },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    const sanitized = users.map(({ password, ...user }) => user);
+    const admins = await this.prisma.user.findMany({
+      skip,
+      take: limit,
+      where: {
+        role: "ADMIN"
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    const sanitizedUsers = users.map(({ password, ...user }) => user);
+    const sanitizedAdmins = admins.map(({ password, ...user }) => user)
+    const totalAdmins = await this.prisma.user.count({ where: { role: 'ADMIN' } })
+    const totalUsers = await this.prisma.user.count({ where: { role: 'USER' } })
 
     return {
       page,
       limit,
-      size: sanitized.length,
-      users: sanitized,
+      totalUsers: totalAdmins + totalUsers,
+      admins: {
+        size: sanitizedAdmins.length,
+        users: sanitizedAdmins,
+        total: totalAdmins
+      },
+      users: {
+        size: sanitizedUsers.length,
+        users: sanitizedUsers,
+        total: totalUsers
+      },
     };
   }
 

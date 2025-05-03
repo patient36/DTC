@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { login, logout, getCurrentUser, register } from '@/services/authService';
+import { login, logout, getCurrentUser, register, resetPassword, getResetPasswordToken } from '@/services/authService';
 
 export const useAuth = () => {
     const queryClient = useQueryClient();
@@ -9,6 +9,12 @@ export const useAuth = () => {
         queryFn: getCurrentUser,
         retry: false,
     });
+
+    const tokenQuery = useQuery({
+        queryKey: ['auth', 'token'],
+        queryFn: () => localStorage.getItem('auth_token'),
+        retry: false,
+    })
 
     const loginMutation = useMutation({
         mutationFn: login,
@@ -22,6 +28,14 @@ export const useAuth = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
         }
+    })
+
+    const resetPasswordMutation = useMutation({
+        mutationFn: resetPassword
+    })
+
+    const getResetToken = useMutation({
+        mutationFn: getResetPasswordToken
     })
 
     const logoutMutation = useMutation({
@@ -40,5 +54,11 @@ export const useAuth = () => {
         logout: logoutMutation.mutate,
         registerUser: registerMutation.mutate,
         isAuthenticated: !!userQuery.data,
+
+        getToken: getResetToken.mutate,
+        tokenLoading: getResetToken.isPending,
+        tokenError: getResetToken.isError,
+        tokenSuccess: getResetToken.isSuccess,
+        resetPassword: resetPasswordMutation.mutate
     };
 };

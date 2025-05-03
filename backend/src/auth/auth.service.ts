@@ -105,7 +105,7 @@ export class AuthService {
     if (!userId) {
       throw new HttpException('Invalid user ID', HttpStatus.BAD_REQUEST);
     }
-  
+
     try {
       const [user, delivered, pending] = await Promise.all([
         this.prisma.user.findUnique({
@@ -122,11 +122,11 @@ export class AuthService {
         this.prisma.capsule.count({ where: { ownerId: userId, delivered: true } }),
         this.prisma.capsule.count({ where: { ownerId: userId, delivered: false } }),
       ]);
-  
+
       if (!user) {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-  
+
       return {
         ...user,
         capsules: {
@@ -154,7 +154,7 @@ export class AuthService {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
       const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET as string, {
-        expiresIn: '10min',
+        expiresIn: '30min',
       });
       const body = `
           <div style="font-family: sans-serif; color: #333;">
@@ -163,18 +163,18 @@ export class AuthService {
             <div style="background: #f4f4f4; padding: 12px; border-radius: 6px; font-size: 18px; font-family: monospace; color: #007bff; user-select: all;">
               ${token}
             </div>
-            <code style="color: green;">Note that this token will expire in 10 minutes </code>
+            <code style="color: green;">Note that this token will expire in 30 minutes </code>
             <p style="margin-top: 20px;">If you did not request this, please ignore the email.</p>
             <p style="margin-top: 30px;">— DTC Security Team</p>
           </div>
         `;
 
       await this.MailService.sendEmail(user.email, 'Reset Password Token', body);
-      return { message: "Token sent to the given email" }
+      return { message: "Token sent to the given email valid for 30 minutes" }
     } catch (error) {
       console.error(error)
       throw new HttpException(
-        error instanceof HttpException ? error.message : 'Failed to create capsule',
+        error instanceof HttpException ? error.message : 'Failed to send token',
         error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

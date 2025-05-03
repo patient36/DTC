@@ -1,5 +1,6 @@
 import axios from '@/lib/axios.config';
 import { RegisterFormValues } from '@/schemas/register.schema';
+import { ResetPasswordFormValues } from '@/schemas/reset.password.schema';
 
 export const login = async (credentials: { email: string; password: string }) => {
     const { data } = await axios.post('/auth/login', credentials);
@@ -23,3 +24,12 @@ export const register = async ({ name, email, password, confirmPassword, }: Regi
     const { data } = await axios.post('/auth/register', { name, email, password });
     return data;
 };
+
+export const getResetPasswordToken = async ({ email }: { email: string }) => {
+    const { data } = await axios.post('/auth/get-reset-token', { email })
+}
+
+export const resetPassword = async ({ email, token, newPassword }: ResetPasswordFormValues) => {
+    const { data } = await axios.post('/auth/reset-password', { email, token, newPassword })
+    return data
+}
