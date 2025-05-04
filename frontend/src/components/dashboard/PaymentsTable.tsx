@@ -111,9 +111,12 @@ export const PaymentsTable = ({
   ];
 
   const defaultOptions = [5, 10, 25, 50, 100];
-  const options = [rowsPerPage, ...defaultOptions]
-    .filter((v, i, self) => v <= total && self.indexOf(v) === i)
-    .sort((a, b) => a - b);
+
+  const options = [...new Set([
+    ...defaultOptions.filter(v => v <= total),
+    ...(total < Math.min(...defaultOptions) ? [total] : [])
+  ])].sort((a, b) => a - b);
+
 
   return (
     <motion.div

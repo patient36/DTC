@@ -1,43 +1,32 @@
 "use client"
 
-import { useRegisterForm } from '@/hooks/forms/useRegisterForm';
-import { RegisterFormValues } from '@/schemas/register.schema';
 import Link from 'next/link';
 import React from 'react';
-import { useAuth } from '@/hooks/auth/useAuth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify'
+import { useRegisterAdminForm } from '@/hooks/forms/useAdminRegistrationForm';
+import { RegisterAdminFormValues } from '@/schemas/admin.registration.schema';
+import { useAdmin } from '@/hooks/admin/useAdmin';
 
-const RegistrationForm = () => {
-    const { register, handleSubmit, formState: { errors } } = useRegisterForm()
-    const { registerUser } = useAuth()
+const AdminRegistrationForm = () => {
+    const { register, handleSubmit, formState: { errors } } = useRegisterAdminForm()
+    const {createAdmin} = useAdmin()
     const router = useRouter()
 
-    const onSubmit = (data: RegisterFormValues) => {
-        registerUser(data, {
-            onSuccess: () => {
-                toast.success('Account created successfully')
-                toast.info('You can now login')
-                router.push('/')
-            },
-            onError: (err: any) => {
-                toast.error(err?.message || 'Sign up failed. Please try again')
-            }
-        })
+    const onSubmit = (data: RegisterAdminFormValues) => {
+        console.log(data)
     }
 
     return (
-        <div className="flex min-h-screen flex-col md:flex-row">
-            <div className="hidden md:flex w-1/2 bg-blue-950 text-white flex-col justify-center items-center p-8">
-                <h1 className="text-5xl font-extrabold mb-6">Welcome to DTC</h1>
-                <p className="text-lg text-center italic">
-                    Capture your thoughts today and send them to your future self. <br />
-                    Join us in preserving your memories for tomorrow.
-                </p>
+        <div className="flex min-h-screen p-4 flex-col md:flex-row">
+            <div className="hidden md:flex w-1/2 bg-blue-750 text-white flex-col justify-center items-center p-8">
+                <h1 className="text-3xl font-extrabold mb-6 text-green-500">Welcome to DTC Admin Portal</h1>
+                <p>Join us in preserving your memories for tomorrow.</p>
+                <p className="text-sm font-bold mt-4">To continue you will need assistance from an already existing admin.</p>
             </div>
 
-            <div className="w-full min-h-screen md:w-1/2 flex flex-col justify-center items-center bg-gray-900 text-white">
-                <h2 className="text-3xl font-bold mb-6">Register</h2>
+            <div className="w-full rounded-md min-h-screen md:w-1/2 flex flex-col justify-center items-center bg-gray-800 text-white">
+                <h2 className="text-3xl font-bold mb-6">Register as System Admin</h2>
                 <form
                     onSubmit={handleSubmit(onSubmit)}
                     method='post'
@@ -67,6 +56,19 @@ const RegistrationForm = () => {
                             placeholder="Enter your email"
                         />
                         {errors.email && <p className='text-sm text-red-500'>{errors.email.message}</p>}
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="token" className="block text-sm font-medium text-gray-300">
+                            Admin Token
+                        </label>
+                        <input
+                            type="text"
+                            id="token"
+                            {...register('adminToken')}
+                            className="mt-1 w-full border border-gray-600 rounded-md p-2 bg-gray-700 text-white"
+                            placeholder="Enter the provided admin token"
+                        />
+                        {errors.adminToken && <p className='text-sm text-red-500'>{errors.adminToken.message}</p>}
                     </div>
                     <div className="mb-4">
                         <label htmlFor="password" className="block text-sm font-medium text-gray-300">
@@ -114,4 +116,4 @@ const RegistrationForm = () => {
     );
 };
 
-export default RegistrationForm;
+export default AdminRegistrationForm;

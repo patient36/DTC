@@ -10,12 +10,6 @@ export const useAuth = () => {
         retry: false,
     });
 
-    const tokenQuery = useQuery({
-        queryKey: ['auth', 'token'],
-        queryFn: () => localStorage.getItem('auth_token'),
-        retry: false,
-    })
-
     const loginMutation = useMutation({
         mutationFn: login,
         onSuccess: () => {

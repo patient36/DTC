@@ -19,31 +19,46 @@ export class AdminService {
   ) { }
 
   // Get an admin registration token
-  async getAdminToken(user: AuthedUser, password: string) {
-    try {
-      const admin = await this.prisma.user.findUnique({ where: { id: user.userId } })
-      if (!admin) {
-        throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
-      }
-      if (!password) {
-        throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
-      }
-      const isPasswordValid = await bcrypt.compare(password, admin.password);
-      if (!isPasswordValid) {
-        throw new HttpException('Wrong password', HttpStatus.BAD_REQUEST);
-      }
-      const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET as string, {
-        expiresIn: '1h',
-      });
-      return { token }
-    } catch (error) {
-      console.error('Failed to generate Admin token', error)
-      throw new HttpException(
-        error instanceof HttpException ? error.message : 'Failed to generate Admin token',
-        error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+ async getAdminToken(user: AuthedUser, password: string) {
+  try {
+    const admin = await this.prisma.user.findUnique({
+      where: { id: user.userId },
+    });
+
+    if (!admin) {
+      throw new HttpException("Admin not found", HttpStatus.NOT_FOUND);
     }
+
+    if (!password || typeof password !== "string") {
+      throw new HttpException("Password is required", HttpStatus.BAD_REQUEST);
+    }
+
+    if (!admin.password || typeof admin.password !== "string") {
+      throw new HttpException("Invalid admin password stored", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
+
+    if (!isPasswordValid) {
+      throw new HttpException("Wrong password", HttpStatus.BAD_REQUEST);
+    }
+
+    const token = jwt.sign(
+      { email: user.email },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "1h" }
+    );
+
+    return { token };
+  } catch (error) {
+    console.error("Failed to generate Admin token", error);
+    throw new HttpException(
+      error instanceof HttpException ? error.message : "Failed to generate Admin token",
+      error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
+}
+
 
   // Register new Admin
   async create(dto: CreateAdminDto) {
@@ -261,6 +276,7 @@ export class AdminService {
     return {
       page,
       limit,
+      total: await this.prisma.payment.count(),
       size: payments.length,
       payments: payments,
     };

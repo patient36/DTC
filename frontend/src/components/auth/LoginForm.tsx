@@ -13,9 +13,15 @@ const LoginForm = () => {
     const router = useRouter()
     const onSubmit = (data: LoginFormValues) => {
         login(data, {
-            onSuccess: () => {
+            onSuccess: (user) => {
                 toast.success('Logged in successfully')
-                router.push('/dashboard')
+                const roleRoutes: Record<string, string> = {
+                    ADMIN: '/admin/dashboard',
+                    USER: '/dashboard',
+                };
+
+                const redirectPath = roleRoutes[user.role] || '/dashboard';
+                router.push(redirectPath);
             },
             onError: (err: any) =>
                 toast.error(err?.message || 'Login failed. Please try again'),

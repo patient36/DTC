@@ -29,13 +29,19 @@ const NavBar: React.FC = () => {
 
   const handleLogout = () => {
     try {
-      logout()
-      toast.success('Logged out')
-      router.push('/')
+      logout();
+      toast.success('Logged out');
+
+      if (window.location.pathname === '/') {
+        router.refresh();
+      } else {
+        router.push('/');
+      }
     } catch (error: any) {
-      toast.error(error)
+      toast.error(error?.message || 'Logout failed');
     }
-  }
+  };
+
 
   const authSection = isAuthenticated ? (
     <button
