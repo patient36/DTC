@@ -60,7 +60,7 @@ const AdminDashboard = () => {
                 />
 
                 <StorageCard
-                    usedStorage={20}
+                    usedStorage={user.usedStorage}
                     freeStorage={freeStorage}
                     storageRate={storageRate}
                 />

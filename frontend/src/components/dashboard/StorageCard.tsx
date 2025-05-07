@@ -17,7 +17,7 @@ export const StorageCard = ({ usedStorage, freeStorage, storageRate }: StorageCa
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-[#1e293b] p-6 rounded-2xl shadow-xl text-white"
+      className="relative bg-gradient-to-br from-[#1e293b]/80 to-[#0f172a]/80 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50 shadow-2xl overflow-hidden"
     >
       <div className="flex items-center gap-4 mb-4">
         <FaCloudUploadAlt className="text-purple-400 text-3xl" />

@@ -2,6 +2,7 @@ import { useState } from "react"
 import Modal from '@/components/gloabal/modal';
 import { FaUser, FaEnvelope, FaShieldAlt, FaDatabase, FaCalendarCheck, FaRocket, FaBoxOpen, FaClock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { formatDate } from "@/utils/formatDates";
 
 const SearchById = () => {
     const [id, setId] = useState('')
@@ -99,7 +100,7 @@ const SearchById = () => {
                                                 {new Date(data.user.paidUntil) > new Date() ? 'Active' : 'Expired'}
                                             </span>
                                             <p className="text-sm text-gray-400">
-                                                Until {new Date(data.user.paidUntil).toLocaleDateString()}
+                                                {new Date(data.user.paidUntil) > new Date() ? 'Until' : 'at'} {formatDate(data.user.paidUntil)}
                                             </p>
                                         </div>
                                     </div>
@@ -129,7 +130,7 @@ const SearchById = () => {
                                         <FaShieldAlt className="text-red-400" />
                                         User ID: {data.user.id}
                                     </div>
-                                    <p>Joined: {new Date(data.user.createdAt).toLocaleDateString()}</p>
+                                    <p>Joined: {formatDate(data.user.createdAt)}</p>
                                 </div>
                             </motion.div>
                         </Modal>
