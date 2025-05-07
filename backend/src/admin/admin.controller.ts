@@ -37,6 +37,12 @@ export class AdminController {
     return this.adminService.findAllPayments(page, limit);
   }
 
+  // Get a user
+  @Get('/users/:id')
+  findOneUser(@Param('id') id: string) {
+    return this.adminService.findOneUser(id);
+  }
+
   // Delete user
   @Delete('/users/:id')
   deleteUser(@Param('id') id: string) {

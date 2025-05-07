@@ -115,6 +115,7 @@ export class AuthService {
             name: true,
             email: true,
             usedStorage: true,
+            role: true,
             createdAt: true,
             paidUntil: true,
           },

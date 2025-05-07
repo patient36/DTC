@@ -10,11 +10,20 @@ import { useAdmin } from '@/hooks/admin/useAdmin';
 
 const AdminRegistrationForm = () => {
     const { register, handleSubmit, formState: { errors } } = useRegisterAdminForm()
-    const {createAdmin} = useAdmin()
+    const { createAdmin } = useAdmin()
     const router = useRouter()
 
     const onSubmit = (data: RegisterAdminFormValues) => {
-        console.log(data)
+        const { confirmPassword, ...rest } = data
+        console.log(rest)
+        createAdmin(rest, {
+            onSuccess: () => {
+                toast.success('Admin created')
+            },
+            onError: () => {
+                toast.error('Failed to create admin')
+            }
+        })
     }
 
     return (

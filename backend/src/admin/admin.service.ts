@@ -19,45 +19,45 @@ export class AdminService {
   ) { }
 
   // Get an admin registration token
- async getAdminToken(user: AuthedUser, password: string) {
-  try {
-    const admin = await this.prisma.user.findUnique({
-      where: { id: user.userId },
-    });
+  async getAdminToken(user: AuthedUser, password: string) {
+    try {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: user.userId },
+      });
 
-    if (!admin) {
-      throw new HttpException("Admin not found", HttpStatus.NOT_FOUND);
+      if (!admin) {
+        throw new HttpException("Admin not found", HttpStatus.NOT_FOUND);
+      }
+
+      if (!password || typeof password !== "string") {
+        throw new HttpException("Password is required", HttpStatus.BAD_REQUEST);
+      }
+
+      if (!admin.password || typeof admin.password !== "string") {
+        throw new HttpException("Invalid admin password stored", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, admin.password);
+
+      if (!isPasswordValid) {
+        throw new HttpException("Wrong password", HttpStatus.BAD_REQUEST);
+      }
+
+      const token = jwt.sign(
+        { email: user.email },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "1h" }
+      );
+
+      return { token };
+    } catch (error) {
+      console.error("Failed to generate Admin token", error);
+      throw new HttpException(
+        error instanceof HttpException ? error.message : "Failed to generate Admin token",
+        error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
-
-    if (!password || typeof password !== "string") {
-      throw new HttpException("Password is required", HttpStatus.BAD_REQUEST);
-    }
-
-    if (!admin.password || typeof admin.password !== "string") {
-      throw new HttpException("Invalid admin password stored", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, admin.password);
-
-    if (!isPasswordValid) {
-      throw new HttpException("Wrong password", HttpStatus.BAD_REQUEST);
-    }
-
-    const token = jwt.sign(
-      { email: user.email },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "1h" }
-    );
-
-    return { token };
-  } catch (error) {
-    console.error("Failed to generate Admin token", error);
-    throw new HttpException(
-      error instanceof HttpException ? error.message : "Failed to generate Admin token",
-      error instanceof HttpException ? error.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
-    );
   }
-}
 
 
   // Register new Admin
@@ -345,6 +345,38 @@ export class AdminService {
 
       const { password, ...safeUser } = user;
       return safeUser;
+
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(
+        'Failed to delete user',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // find a user
+  async findOneUser(id: string) {
+    try {
+      if (!id) {
+        throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
+      }
+
+      const user = await this.prisma.user.findUnique({ where: { id } });
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      const deliveredCapsules = await this.prisma.capsule.count({
+        where: { ownerId: user.id, delivered: true },
+      });
+
+      const pendingCapsules = await this.prisma.capsule.count({
+        where: { ownerId: user.id, delivered: false },
+      });
+
+      const { password, ...safeUser } = user;
+      return { user: safeUser, capsules: { delivered: deliveredCapsules, pending: pendingCapsules } };
 
     } catch (error) {
       console.error(error);

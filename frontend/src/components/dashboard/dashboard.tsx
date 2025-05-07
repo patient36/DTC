@@ -10,8 +10,8 @@ import { StorageCard } from '@/components/dashboard/StorageCard';
 import { CapsulesCard } from '@/components/dashboard/CapsulesCard';
 import { PaymentsTable } from '@/components/dashboard/PaymentsTable';
 import { usePayment } from '@/hooks/queries/usePayments';
-import AccountSettingsPage from './settings/AccountSettings';
-import LoadingSpinner from '../gloabal/Spinner';
+import AccountSettingsPage from "@/components/dashboard/settings/AccountSettings";
+import LoadingSpinner from '@/components/gloabal/Spinner';
 
 const Dashboard = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -29,6 +29,9 @@ const Dashboard = () => {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/');
+    }
+    if (!isLoading && isAuthenticated && user?.role === 'ADMIN') {
+      router.push('/admin/dashboard');
     }
   }, [isLoading, isAuthenticated]);
 

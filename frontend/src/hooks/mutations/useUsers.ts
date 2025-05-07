@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateUser, deleteUser } from '@/services/userService';
 
-export const useUser = (id: string) => {
+export const useUser = (id?: string) => {
     const queryClient = useQueryClient();
 
     const updateUserMutation = useMutation({

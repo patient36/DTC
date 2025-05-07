@@ -49,7 +49,7 @@ const DeleteAccountButton = ({ onClose }: { onClose: () => void }) => {
             </button>
 
             {showConfirm && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/70 top-0 left-0  flex items-center justify-center z-50">
                     <div className="bg-gray-800 text-white p-6 rounded-lg w-80 space-y-4 shadow-xl">
                         <h3 className="text-lg font-bold">Confirm Deletion</h3>
                         <p className="text-sm text-amber-400">
