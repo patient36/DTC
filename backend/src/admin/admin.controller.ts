@@ -45,7 +45,7 @@ export class AdminController {
 
   // Delete user
   @Delete('/users/:id')
-  deleteUser(@Param('id') id: string) {
-    return this.adminService.deleteUser(id)
+  deleteUser(@Param('id') id: string, @Body('password') password: string, @CurrentUser() user: AuthedUser) {
+    return this.adminService.deleteUser(id, password, user);
   }
 }

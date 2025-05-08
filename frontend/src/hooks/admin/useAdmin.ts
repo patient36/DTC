@@ -1,21 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAdminToken, getAllUsers, getAllPayments, deleteUser, registerAdmin } from "@/services/AdminService";
+import { getAdminToken, getAllUsers, getAllPayments, deleteUser, registerAdmin, getUser } from "@/services/AdminService";
 import { PaymentsResponse } from "@/types/payment";
-import { UsersResponse } from "@/types/user";
+import { UsersResponse, UserResponse } from "@/types/user";
 
 export const useAdmin = (page = 1, limit = 10) => {
-  const queryClient = useQueryClient();
 
   // Users Query & Mutation
   const usersQuery = useQuery<UsersResponse>({
     queryKey: ['admin', 'users', page, limit],
     queryFn: () => getAllUsers(page, limit),
     retry: false,
-  });
-
-  const deleteUserMutation = useMutation({
-    mutationFn: (id: string) => deleteUser(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
 
   // Payments Query
@@ -49,11 +43,6 @@ export const useAdmin = (page = 1, limit = 10) => {
     isCreatingAdmin: createAdminMutation.isPending,
     createAdminError: createAdminMutation.error,
     createAdminSuccess: createAdminMutation.isSuccess,
-
-    // Delete User
-    deleteUser: deleteUserMutation.mutate,
-    isDeletingUser: deleteUserMutation.isPending,
-    deleteUserError: deleteUserMutation.error,
   };
 };
 
@@ -67,4 +56,39 @@ export const useToken = () => {
     getAdminToken: getAdminTokenMutation.mutate,
   }
 
+}
+
+export const useManageUsers = (id: string) => {
+  const queryClient = useQueryClient()
+
+  const userQuery = useQuery<UserResponse>({
+    queryKey: ['admin', 'users', id],
+    queryFn: () => getUser(id),
+    retry: false,
+  })
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (variables: { id: string, password: string }) => deleteUser(id, variables.password),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        predicate: query =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === 'admin' &&
+          query.queryKey[1] === 'users',
+      });
+    }
+
+  })
+
+  return {
+    // user
+    data: userQuery.data,
+    userLoading: userQuery.isLoading,
+    userError: userQuery.isError,
+
+    // delete
+    deleteUser: deleteUserMutation.mutate,
+    isDeleting: deleteUserMutation.isPending,
+    isDeletingError: deleteUserMutation.isError
+  }
 }

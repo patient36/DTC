@@ -20,7 +20,12 @@ export const getAllPayments = async (page: number, limit: number) => {
     return data;
 }
 
-export const deleteUser = async (id: string) => {
-    const { data } = await axios.delete(`/admin/users/${id}`);
+export const deleteUser = async (id: string, password: string) => {
+    const { data } = await axios.delete(`/admin/users/${id}`, { data: { password } });
+    return data;
+}
+
+export const getUser = async (id: string) => {
+    const { data } = await axios.get(`/admin/users/${id}`);
     return data;
 }

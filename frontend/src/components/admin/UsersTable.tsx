@@ -12,11 +12,12 @@ interface UsersTableProps {
     total: number;
     onPageChange: (newPage: number) => void;
     onRowsPerPageChange: (newRowsPerPage: number) => void;
+    onRowClick: (id: string) => void;
 }
 
 type ColumnKey = keyof User
 
-const UsersTable = ({ users, page, rowsPerPage, total, tableTitle, onPageChange, onRowsPerPageChange }: UsersTableProps) => {
+const UsersTable = ({ users, page, rowsPerPage, total, tableTitle, onPageChange, onRowsPerPageChange, onRowClick }: UsersTableProps) => {
     const totalPages = Math.ceil(total / rowsPerPage);
     const startItem = Math.max(1, (1 + (rowsPerPage * (page - 1))))
     const endItem = Math.min(page * rowsPerPage, total);
@@ -140,7 +141,9 @@ const UsersTable = ({ users, page, rowsPerPage, total, tableTitle, onPageChange,
                     </thead>
                     <tbody className="bg-gray-900/50 divide-y divide-gray-800">
                         {users.map((user) => (
-                            <tr key={user.id}
+                            <tr
+                                onClick={() => onRowClick(user.id)}
+                                key={user.id}
                                 className="hover:bg-gray-800/30 transition-colors cursor-pointer">
                                 {visibleColumns.id && (
                                     <td className="px-4 py-4 whitespace-nowrap">

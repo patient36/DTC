@@ -59,7 +59,6 @@ export class AdminService {
     }
   }
 
-
   // Register new Admin
   async create(dto: CreateAdminDto) {
     try {
@@ -284,17 +283,34 @@ export class AdminService {
   }
 
   // Delete user
-  async deleteUser(id: string) {
-    if (!id) {
-      throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
-    }
-
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-    }
-
+  async deleteUser(id: string, password: string, adminUser: AuthedUser) {
     try {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUser.userId, role: 'ADMIN' },
+      });
+
+      if (!admin) {
+        throw new HttpException("Admin not found", HttpStatus.NOT_FOUND);
+      }
+
+      if (!password || typeof password !== "string") {
+        throw new HttpException("Password is required", HttpStatus.BAD_REQUEST);
+      }
+
+      if (!admin.password || typeof admin.password !== "string") {
+        throw new HttpException("Invalid admin password stored", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, admin.password);
+      if (!isPasswordValid) {
+        throw new HttpException("Wrong password", HttpStatus.BAD_REQUEST);
+      }
+
+      const user = await this.prisma.user.findFirst({ where: { id: id, NOT: { role: 'ADMIN' } }})
+      if (!user) {
+        throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+      }
+
       const capsules = await this.prisma.capsule.findMany({
         where: { ownerId: user.id },
         select: { id: true, attachments: true },
@@ -313,8 +329,7 @@ export class AdminService {
         }
       }
 
-      //delete stripe customer
-      await this.stripe.deleteCustomer(user.id)
+      await this.stripe.deleteCustomer(user.id);
 
       await this.prisma.$transaction([
         this.prisma.payment.deleteMany({ where: { payerId: user.id } }),
@@ -337,23 +352,17 @@ export class AdminService {
         </div>
       `;
 
-      await this.MailService.sendEmail(
-        user.email,
-        'Your Account Has Been Deleted',
-        message
-      );
+      await this.MailService.sendEmail(user.email, 'Your Account Has Been Deleted', message);
 
-      const { password, ...safeUser } = user;
+      const { password: _, ...safeUser } = user;
       return safeUser;
 
     } catch (error) {
       console.error(error);
-      throw new HttpException(
-        'Failed to delete user',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      throw new HttpException('Failed to delete user', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
 
   // find a user
   async findOneUser(id: string) {
@@ -381,7 +390,7 @@ export class AdminService {
     } catch (error) {
       console.error(error);
       throw new HttpException(
-        'Failed to delete user',
+        'Failed to fetch user',
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }

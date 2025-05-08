@@ -25,3 +25,9 @@ export interface UsersResponse {
         total: number;
     };
 };
+
+
+export interface UserResponse {
+    user: User,
+    capsules: { delivered: number, total: number, pending: number }
+}

@@ -5,6 +5,8 @@ import { toast } from 'react-toastify'
 import { BsClipboard2 } from "react-icons/bs";
 import { BsClipboard2Check } from "react-icons/bs";
 import { motion } from 'framer-motion'
+import { FaLock } from "react-icons/fa";
+import { FaShield } from "react-icons/fa6";
 
 const TokenCard = () => {
     const { getAdminToken } = useToken();
@@ -35,10 +37,17 @@ const TokenCard = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-[#1e293b] p-6 rounded-2xl shadow-xl"
+            className="relative bg-gradient-to-br from-[#1e293b]/80 to-[#0f172a]/80 p-6 rounded-2xl backdrop-blur-xl border border-gray-700/50 shadow-2xl overflow-hidden"
         >
             <div className="flex flex-col gap-4">
-                <h2 className="text-2xl font-bold text-center text-white tracking-wide">🔐 Admin Token</h2>
+                <div className="flex items-center gap-4">
+                    <div className="p-2 bg-gradient-to-br from-amber-600 to-purple-400 rounded-xl shadow-lg">
+                        <FaShield className="text-white text-2xl" />
+                    </div>
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        Admin Token
+                    </h2>
+                </div>
                 <input
                     type="password"
                     placeholder="Enter your password"

@@ -26,7 +26,7 @@ export const AccountCard = ({ email, createdAt, paidUntil, onManageClick }: Acco
         className="flex items-center gap-4 mb-6 cursor-pointer"
         onClick={onManageClick}
       >
-        <div className="relative flex items-center justify-center w-12 h-12 rounded-full">
+        <div className="relative flex items-center justify-center w-12 h-12 bg-gradient-to-br from-gray-900 to-gray-700 rounded-full">
           <FaUserCog className="text-2xl text-amber-500 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text" />
           <FiZap className="absolute -top-1 -right-2 text-amber-400 text-xs animate-pulse" />
         </div>
@@ -49,7 +49,7 @@ export const AccountCard = ({ email, createdAt, paidUntil, onManageClick }: Acco
             className="group relative p-2 rounded-xl bg-gradient-to-r from-gray-800/30 to-gray-900/20 hover:from-gray-800/50 transition-all"
           >
             <div className="absolute inset-0 border-l-2 border-cyan-400/30 group-hover:border-cyan-400/50 transition-all" />
-            <p className="text-xs font-mono text-cyan-300/80 ml-1">{item.label}:</p>
+            <p className="text-sm font-mono text-cyan-300/80 ml-1">{item.label}:</p>
             <motion.p
               whileHover={{ x: 5 }}
               className="font-semibold text-transparent bg-gradient-to-r from-amber-200 to-amber-400 bg-clip-text"

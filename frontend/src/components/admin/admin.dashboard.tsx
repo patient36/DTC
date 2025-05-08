@@ -15,10 +15,13 @@ import LoadingSpinner from '@/components/gloabal/Spinner';
 import AccountSettingsPage from "@/components/dashboard/settings/AccountSettings";
 import { PaymentsTable } from '@/components/dashboard/PaymentsTable';
 import SeachById from "@/components/admin/SearchById";
+import ProfileCard from '@/components/admin/user.profile'
 
 
 const AdminDashboard = () => {
     const [page, setPage] = useState(1)
+    const [viewUser, setViewUser] = useState(false)
+    const [id, setId] = useState('')
     const [isOpen, setIsOpen] = useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10)
     const { usersData } = useAdmin(page, rowsPerPage)
@@ -82,6 +85,10 @@ const AdminDashboard = () => {
                     rowsPerPage={rowsPerPage}
                     onPageChange={setPage}
                     onRowsPerPageChange={handlePageSizeChange}
+                    onRowClick={(id: string) => {
+                        setId(id)
+                        setViewUser(true)
+                    }}
                 />) : (
                 <div className="text-gray-400 py-4 text-center">No admins found</div>
             )}
@@ -94,6 +101,10 @@ const AdminDashboard = () => {
                     rowsPerPage={rowsPerPage}
                     onPageChange={setPage}
                     onRowsPerPageChange={handlePageSizeChange}
+                    onRowClick={(id: string) => {
+                        setId(id)
+                        setViewUser(true)
+                    }}
                 />) : (
                 <div className="text-gray-400 py-4 text-center">No users found</div>
             )}
@@ -116,6 +127,14 @@ const AdminDashboard = () => {
                     <AccountSettingsPage onClose={() => setIsOpen(false)} />
                 </Modal>
             )}
+
+            {
+                viewUser && (
+                    <Modal onClose={() => setViewUser(false)}>
+                        <ProfileCard id={id} onClose={() => setViewUser(false)} />
+                    </Modal>
+                )
+            }
         </div>
     );
 };

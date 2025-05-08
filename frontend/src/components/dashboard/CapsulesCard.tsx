@@ -8,8 +8,8 @@ interface CapsulesCardProps {
 }
 
 export const CapsulesCard = ({ total, delivered, pending }: CapsulesCardProps) => {
-  const successRate = Math.round((delivered / total) * 100);
-  const pendingRate = Math.round((pending / total) * 100);
+  const successRate = total === 0 ? 0 : Math.round((delivered / total) * 100);
+  const pendingRate = total === 0 ? 0 : Math.round((pending / total) * 100);
 
   return (
     <motion.div
@@ -30,10 +30,10 @@ export const CapsulesCard = ({ total, delivered, pending }: CapsulesCardProps) =
             <FaRocket className="text-white text-lg" />
           </motion.div>
           <div>
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-teal-300">
+            <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-teal-300">
               Capsules Stats
             </h2>
-            <p className="text-sm text-gray-400">Real-time delivery metrics</p>
+            <p className="text-xs text-gray-400">Real-time delivery metrics</p>
           </div>
         </div>
       </div>
@@ -85,41 +85,46 @@ export const CapsulesCard = ({ total, delivered, pending }: CapsulesCardProps) =
 
       {/* Progress Bars */}
       <div className="relative z-10 space-y-4">
-        <div>
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>Delivery Progress</span>
-            <span>{successRate}%</span>
-          </div>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${successRate}%` }}
-            transition={{ delay: 0.4, duration: 1, type: 'spring' }}
-            className="h-2.5 bg-emerald-900 rounded-full overflow-hidden"
-          >
-            <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500"></div>
-          </motion.div>
-        </div>
-
-        <div>
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>Pending Completion</span>
-            <span>{pendingRate}%</span>
-          </div>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pendingRate}%` }}
-            transition={{ delay: 0.6, duration: 1, type: 'spring' }}
-            className="h-2.5 bg-violet-900 rounded-full overflow-hidden"
-          >
-            <div className="h-full bg-gradient-to-r from-violet-400 to-purple-500"></div>
-          </motion.div>
-        </div>
+        <ProgressBar
+          label="Delivery Progress"
+          percentage={successRate}
+          gradient="linear-gradient(to right, #34d399, #14b8a6)"
+        />
+        <ProgressBar
+          label="Pending Completion"
+          percentage={pendingRate}
+          gradient="linear-gradient(to right, #a78bfa, #8b5cf6)"
+        />
       </div>
 
+
       {/* Footer */}
-      <div className="flex items-center justify-center p-4 border-t-2 border-slate-800 mt-2 text-xs text-gray-600 ">
-          DTC Temporal Network Stats
+      <div className="absolute bottom-0 w-full flex items-center justify-center p-4 border-t-2 border-slate-800 mt-2 text-xs text-gray-600 ">
+        DTC Temporal Network Stats
       </div>
     </motion.div>
   );
 };
+
+
+const ProgressBar = ({ label, percentage, gradient }: { label: string, percentage: number, gradient: string }) => (
+  <div>
+    <div className="flex justify-between text-xs text-gray-400 mb-1">
+      <span>{label}</span>
+      <span>{percentage}%</span>
+    </div>
+    <div className={`h-2.5 bg-gray-700 rounded-full overflow-hidden relative`}>
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${percentage}%` }}
+        transition={{ delay: 0.4, duration: 1, type: 'spring' }}
+        className="absolute top-0 left-0 h-full"
+        style={{
+          backgroundImage: percentage > 0 ? gradient : undefined,
+          backgroundColor: percentage === 0 ? 'rgba(255,255,255,0.1)' : undefined,
+          width: percentage === 0 ? '100%' : undefined,
+        }}
+      />
+    </div>
+  </div>
+);
