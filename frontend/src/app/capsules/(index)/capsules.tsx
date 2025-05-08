@@ -24,13 +24,35 @@ const CapsulesPage = () => {
   const [particles, setParticles] = useState<{ id: number, top: number, left: number, size: number, moveDistance: number, duration: number }[]>([])
   useEffect(() => { setParticles(generateParticles(200)) }, [])
 
-  const { capsulesData, capsulesLoading } = useCapsules()
+  const { capsulesData, capsulesLoading, capsulesError, capsulesErrorDetail } = useCapsules()
 
   useEffect(() => {
     if (!capsulesLoading && !isAuthenticated) {
       router.push('/');
     }
-  }, [capsulesLoading, isAuthenticated]);
+    if (!capsulesLoading && capsulesError) {
+      const isPaymentRequired = capsulesErrorDetail instanceof Error &&
+        capsulesErrorDetail.message === 'Payment required';
+
+      if (isPaymentRequired) {
+        router.push('/payment');
+      } else {
+        console.error('Error fetching capsules:', capsulesErrorDetail);
+      }
+    }
+  }, [capsulesLoading, isAuthenticated, capsulesError, capsulesErrorDetail]);
+
+  if (capsulesError) {
+    const isPaymentRequired =
+      capsulesErrorDetail instanceof Error &&
+      capsulesErrorDetail.message === 'Payment required';
+
+    if (!isPaymentRequired) {
+      console.error('Error fetching capsules:', capsulesErrorDetail);
+    }
+
+    return null;
+  }
 
   if (capsulesLoading || !isAuthenticated) {
     return <LoadingSpinner />

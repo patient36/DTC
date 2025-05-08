@@ -29,14 +29,36 @@ const CapsulePage = () => {
     const [playPaper] = useSound('/sounds/paper.mp3')
     const [confirmShow, setConfirmShow] = useState(false)
 
-    const { capsule, capsuleError, capsuleLoading, deleteCapsule } = useCapsule(id)
+    const { capsule, capsuleError, capsuleErrorDetail, capsuleLoading, deleteCapsule } = useCapsule(id)
     const { isAuthenticated } = useAuth()
 
     useEffect(() => {
         if (!capsuleLoading && !isAuthenticated) {
             router.push('/');
         }
-    }, [capsuleLoading, isAuthenticated]);
+        if (!capsuleLoading && capsuleError) {
+            const isPaymentRequired = capsuleErrorDetail instanceof Error &&
+                capsuleErrorDetail.message === 'Payment required';
+
+            if (isPaymentRequired) {
+                router.push('/payment');
+            } else {
+                console.error('Error fetching capsules:', capsuleErrorDetail);
+            }
+        }
+    }, [capsuleLoading, isAuthenticated, capsuleError, capsuleErrorDetail]);
+
+    if (capsuleError) {
+        const isPaymentRequired =
+            capsuleErrorDetail instanceof Error &&
+            capsuleErrorDetail.message === 'Payment required';
+
+        if (!isPaymentRequired) {
+            console.error('Error fetching capsules:', capsuleErrorDetail);
+        }
+
+        return null;
+    }
 
     if (capsuleLoading || !isAuthenticated) {
         return <LoadingSpinner />

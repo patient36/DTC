@@ -13,11 +13,11 @@ import LoadingSpinner from '../gloabal/Spinner'
 
 const NewCapsuleForm = () => {
     const router = useRouter()
-    const { register, handleSubmit, setValue, formState: { errors },reset } = useCapsuleForm()
+    const { register, handleSubmit, setValue, formState: { errors }, reset } = useCapsuleForm()
     const [timeEffect, setTimeEffect] = useState(false)
     const [attachments, setAttachments] = useState<File[]>([])
 
-    const { createCapsule, isCreating } = useCapsule()
+    const { createCapsule, isCreating, creationError, creationErrorDetail } = useCapsule()
     const { isAuthenticated, isLoading } = useAuth()
 
     const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +59,28 @@ const NewCapsuleForm = () => {
         if (!isAuthenticated && !isLoading) {
             router.push('/');
         }
-    }, [isAuthenticated, isLoading]);
+        if (!isLoading && creationError) {
+            const isPaymentRequired = creationErrorDetail instanceof Error &&
+                creationErrorDetail.message === 'Payment required';
+
+            if (isPaymentRequired) {
+                router.push('/payment');
+            } else {
+                console.error('Error creating capsule:', creationErrorDetail);
+            }
+        }
+    }, [isAuthenticated, isLoading, creationError, creationErrorDetail]);
+    if (creationError) {
+        const isPaymentRequired =
+            creationErrorDetail instanceof Error &&
+            creationErrorDetail.message === 'Payment required';
+
+        if (!isPaymentRequired) {
+            console.error('Error fetching capsules:', creationErrorDetail);
+        }
+
+        return null;
+    }
 
     if (isLoading) {
         return <LoadingSpinner />

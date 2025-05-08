@@ -42,6 +42,7 @@ export const useCapsule = (id?: string) => {
 
         createCapsule: createCapsuleMutation.mutate,
         isCreating: createCapsuleMutation.isPending,
-        creationError: createCapsuleMutation.error
+        creationError: createCapsuleMutation.isError,
+        creationErrorDetail: createCapsuleMutation.error,
     };
 };
