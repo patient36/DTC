@@ -151,7 +151,7 @@ const CapsulesTable = ({ capsules, page, rowsPerPage, total, onPageChange, onRow
               <tr
                 onClick={() => onRowClick(capsule.id)}
                 key={capsule.id}
-                className="hover:bg-gray-800/30 transition-colors cursor-pointer">
+                className={`${capsule.readCount < 2 ? "animate-pulse bg-amber-500/10" : ""} hover:bg-gray-800/30 transition-colors cursor-pointer`}>
                 {visibleColumns.id && (
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="text-sm font-semibold text-gray-100 mb-1">{capsule.id}</div>

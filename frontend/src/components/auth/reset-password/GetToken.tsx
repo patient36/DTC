@@ -2,6 +2,7 @@
 import { useAuth } from "@/hooks/auth/useAuth"
 import { useGetResetTokenForm } from "@/hooks/forms/useResetPasswordForm"
 import { GetResetTokenFormValues } from "@/schemas/reset.password.schema"
+import { FaExclamationTriangle } from "react-icons/fa"
 import { toast } from 'react-toastify'
 
 const GetToken = ({ onTokenSent }: { onTokenSent: (email: string) => void }) => {
@@ -43,7 +44,13 @@ const GetToken = ({ onTokenSent }: { onTokenSent: (email: string) => void }) => 
                 >
                     Receive reset key
                 </button>
-                <p className="text-sm font-semibold text-slate-600">Use an email linked to your account to get a unique key to be used in password reset</p>
+                <p className="text-sm font-semibold text-slate-600 my-2">Use an email linked to your account to get a unique key to be used in password resetting process.</p>
+                <div className="flex flex-row items-center gap-2">
+                    <FaExclamationTriangle className=" text-red-600 text-4xl" />
+                    <strong className="text-xs font-semibold text-slate-400">
+                        A receieved key is valid for a limited time use it as soon as possible before it expires.
+                    </strong>
+                </div>
             </form>
         </div>
     )

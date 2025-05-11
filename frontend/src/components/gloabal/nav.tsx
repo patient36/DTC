@@ -11,6 +11,7 @@ const NavBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { logout, isAuthenticated } = useAuth();
+  const [authBtnText, setAuthBtnText] = useState('Login')
   const router = useRouter()
 
   useEffect(() => {
@@ -20,6 +21,15 @@ const NavBar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setAuthBtnText('Logout')
+    }
+    else{
+      setAuthBtnText('Login')
+    }
+  }, [isAuthenticated])
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
@@ -31,12 +41,8 @@ const NavBar: React.FC = () => {
     try {
       logout();
       toast.success('Logged out');
-
-      if (window.location.pathname === '/') {
-        router.refresh();
-      } else {
-        router.push('/');
-      }
+      setAuthBtnText('Login')
+      router.push('/');
     } catch (error: any) {
       toast.error(error?.message || 'Logout failed');
     }
@@ -49,7 +55,7 @@ const NavBar: React.FC = () => {
       className="flex items-center gap-2 px-4 py-2 rounded-lg text-amber-500 font-bold hover:bg-slate-700/50 transition-colors"
     >
       <FiLogOut className="text-amber-500" />
-      <span>Logout</span>
+      <span>{authBtnText}</span>
     </button>
   ) : (
     <Link
@@ -57,7 +63,7 @@ const NavBar: React.FC = () => {
       className="flex items-center gap-2 px-4 py-2 rounded-lg text-amber-500 font-bold hover:bg-slate-700/50 transition-colors"
     >
       <FiUser className="text-cyan-400" />
-      <span>Login</span>
+      <span>{authBtnText}</span>
     </Link>
   );
 
